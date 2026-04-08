@@ -158,4 +158,15 @@ export const accessApi = {
 
   cancelCliAuthChallenge: (id: string, token: string) =>
     api.post<{ cancelled: boolean; status: string }>(`/cli-auth/challenges/${id}/cancel`, { token }),
+
+  getMembers: (companyId: string) =>
+    api.get<Array<{
+      id: string;
+      companyId: string;
+      principalType: string;
+      principalId: string;
+      status: string;
+      membershipRole: string | null;
+      createdAt: string;
+    }>>(`/companies/${companyId}/members`),
 };

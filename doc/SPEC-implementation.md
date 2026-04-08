@@ -77,7 +77,7 @@ V1 implementation extends this baseline into a company-centric, governance-aware
 - Revenue/expense accounting beyond model/token costs
 - Knowledge base subsystem
 - Public marketplace (ClipHub)
-- Multi-board governance or role-based human permission granularity
+- Multi-board governance or advanced role-based human permission granularity (basic `owner`/`member` roles are implemented)
 - Automatic self-healing orchestration (auto-reassign/retry planners)
 
 ## 6. Architecture
@@ -400,7 +400,10 @@ Side effects:
 ## 9.1 Board Auth
 
 - Session-based auth for human operator
-- Board has full read/write across all companies in deployment
+- `instance_admin` users have full read/write access across all companies in the deployment
+- Non-admin board users can only access companies where they hold an active `company_memberships` row
+- A user with `membershipRole: "owner"` in a company has full permission over that company without needing explicit permission grants
+- A user with `membershipRole: "member"` requires explicit `principal_permission_grants` rows for each permission
 - Every board mutation writes to `activity_log`
 
 ## 9.2 Agent Auth
