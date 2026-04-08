@@ -83,5 +83,38 @@
   },
   "dashboard": {
     "title": "Panel"
+  },
+  "instance": {
+    "title": "Configuración del sistema",
+    "general": "General",
+    "heartbeats": "Latidos",
+    "experimental": "Experimental",
+    "plugins": "Plugins"
+  },
+  "plugins": {
+    "manager": "Gestor de plugins",
+    "install": "Instalar plugin",
+    "installExample": "Instalar ejemplo",
+    "installing": "Instalando...",
+    "available": "Plugins disponibles",
+    "installed": "Plugins instalados",
+    "notInstalled": "No instalado",
+    "noInstalled": "Ningún plugin instalado",
+    "noInstalledHint": "Instala un plugin para ampliar la funcionalidad.",
+    "alphaWarning": "Los plugins están en alpha.",
+    "alphaDetail": "El runtime y la API de plugins están cambiando. Espera cambios mientras esta función madura.",
+    "loading": "Cargando plugins...",
+    "loadingExamples": "Cargando ejemplos incluidos...",
+    "failedLoad": "Error al cargar los plugins.",
+    "failedLoadExamples": "Error al cargar los ejemplos incluidos.",
+    "noExamples": "No se encontraron plugins de ejemplo en este repositorio.",
+    "openSettings": "Abrir configuración",
+    "review": "Revisar",
+    "enable": "Habilitar",
+    "uninstall": "Desinstalar",
+    "cancel": "Cancelar",
+    "installTitle": "Instalar plugin",
+    "installDescription": "Ingresa el nombre del paquete npm del plugin que deseas instalar.",
+    "packageName": "Nombre del paquete npm"
   }
 }

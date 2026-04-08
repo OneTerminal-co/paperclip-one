@@ -83,5 +83,38 @@
   },
   "dashboard": {
     "title": "Dashboard"
+  },
+  "instance": {
+    "title": "Instance Settings",
+    "general": "General",
+    "heartbeats": "Heartbeats",
+    "experimental": "Experimental",
+    "plugins": "Plugins"
+  },
+  "plugins": {
+    "manager": "Plugin Manager",
+    "install": "Install Plugin",
+    "installExample": "Install Example",
+    "installing": "Installing...",
+    "available": "Available Plugins",
+    "installed": "Installed Plugins",
+    "notInstalled": "Not installed",
+    "noInstalled": "No plugins installed",
+    "noInstalledHint": "Install a plugin to extend functionality.",
+    "alphaWarning": "Plugins are alpha.",
+    "alphaDetail": "The plugin runtime and API surface are still changing. Expect breaking changes while this feature settles.",
+    "loading": "Loading plugins...",
+    "loadingExamples": "Loading bundled examples...",
+    "failedLoad": "Failed to load plugins.",
+    "failedLoadExamples": "Failed to load bundled examples.",
+    "noExamples": "No bundled example plugins were found in this checkout.",
+    "openSettings": "Open Settings",
+    "review": "Review",
+    "enable": "Enable",
+    "uninstall": "Uninstall",
+    "cancel": "Cancel",
+    "installTitle": "Install Plugin",
+    "installDescription": "Enter the npm package name of the plugin you wish to install.",
+    "packageName": "npm Package Name"
   }
 }
