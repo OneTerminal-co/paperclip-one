@@ -4,11 +4,13 @@ import { COMPANY_STATUSES } from "../constants.js";
 const logoAssetIdSchema = z.string().uuid().nullable().optional();
 const brandColorSchema = z.string().regex(/^#[0-9a-fA-F]{6}$/).nullable().optional();
 const feedbackDataSharingTermsVersionSchema = z.string().min(1).nullable().optional();
+const languageSchema = z.string().min(2).max(10).nullable().optional();
 
 export const createCompanySchema = z.object({
   name: z.string().min(1),
   description: z.string().optional().nullable(),
   budgetMonthlyCents: z.number().int().nonnegative().optional().default(0),
+  language: languageSchema,
 });
 
 export type CreateCompany = z.infer<typeof createCompanySchema>;
@@ -25,6 +27,7 @@ export const updateCompanySchema = createCompanySchema
     feedbackDataSharingTermsVersion: feedbackDataSharingTermsVersionSchema,
     brandColor: brandColorSchema,
     logoAssetId: logoAssetIdSchema,
+    language: languageSchema,
   });
 
 export type UpdateCompany = z.infer<typeof updateCompanySchema>;

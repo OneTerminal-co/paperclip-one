@@ -463,3 +463,21 @@ Networking behavior for this smoke script:
 - auto-detects and prints a Paperclip host URL reachable from inside OpenClaw Docker
 - default container-side host alias is `host.docker.internal` (override with `PAPERCLIP_HOST_FROM_CONTAINER` / `PAPERCLIP_HOST_PORT`)
 - if Paperclip rejects container hostnames in authenticated/private mode, allow `host.docker.internal` via `pnpm paperclipai allowed-hostname host.docker.internal` and restart Paperclip
+
+## UI Internationalization (i18n)
+
+The board UI supports per-company interface languages via `i18next` / `react-i18next`.
+
+- Locale files: `ui/src/i18n/locales/en.json` and `es.json`
+- i18next is initialised in `ui/src/i18n/index.ts`; language is selected from company settings at runtime
+- Pattern: `import { useTranslation } from "react-i18next"` → `const { t } = useTranslation()` → `t("section.key")`
+- Module-level helper functions that return UI strings must receive `t` as an explicit parameter (hooks cannot run outside React components)
+- `fallbackLng: "en"` — missing keys silently fall back to English
+
+When adding new user-visible strings:
+
+1. Add the key under the appropriate section in `en.json` and `es.json`
+2. Use `t("section.key")` in the component
+3. Validate with `pnpm -r typecheck`
+
+Translation coverage and remaining work: `doc/plans/2026-04-08-i18n-per-company.md`

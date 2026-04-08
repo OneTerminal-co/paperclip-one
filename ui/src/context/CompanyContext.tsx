@@ -13,6 +13,7 @@ import { companiesApi } from "../api/companies";
 import { ApiError } from "../api/client";
 import { queryKeys } from "../lib/queryKeys";
 import type { CompanySelectionSource } from "../lib/company-selection";
+import i18n from "../i18n";
 type CompanySelectionOptions = { source?: CompanySelectionSource };
 
 interface CompanyContextValue {
@@ -28,6 +29,7 @@ interface CompanyContextValue {
     name: string;
     description?: string | null;
     budgetMonthlyCents?: number;
+    language?: string | null;
   }) => Promise<Company>;
 }
 
@@ -89,6 +91,7 @@ export function CompanyProvider({ children }: { children: ReactNode }) {
       name: string;
       description?: string | null;
       budgetMonthlyCents?: number;
+      language?: string | null;
     }) =>
       companiesApi.create(data),
     onSuccess: (company) => {
@@ -102,6 +105,7 @@ export function CompanyProvider({ children }: { children: ReactNode }) {
       name: string;
       description?: string | null;
       budgetMonthlyCents?: number;
+      language?: string | null;
     }) => {
       return createMutation.mutateAsync(data);
     },
@@ -112,6 +116,10 @@ export function CompanyProvider({ children }: { children: ReactNode }) {
     () => companies.find((company) => company.id === selectedCompanyId) ?? null,
     [companies, selectedCompanyId],
   );
+
+  useEffect(() => {
+    i18n.changeLanguage(selectedCompany?.language ?? "en");
+  }, [selectedCompany?.language]);
 
   const value = useMemo(
     () => ({

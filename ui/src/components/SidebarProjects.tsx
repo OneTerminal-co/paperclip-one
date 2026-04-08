@@ -2,6 +2,7 @@ import { useCallback, useMemo, useState } from "react";
 import { NavLink, useLocation } from "@/lib/router";
 import { useQuery } from "@tanstack/react-query";
 import { ChevronRight, Plus } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import {
   DndContext,
   MouseSensor,
@@ -120,6 +121,7 @@ export function SidebarProjects() {
   const { selectedCompany, selectedCompanyId } = useCompany();
   const { openNewProject } = useDialog();
   const { isMobile, setSidebarOpen } = useSidebar();
+  const { t } = useTranslation();
   const location = useLocation();
 
   const { data: projects } = useQuery({
@@ -186,7 +188,7 @@ export function SidebarProjects() {
               )}
             />
             <span className="text-[10px] font-medium uppercase tracking-widest font-mono text-muted-foreground/60">
-              Projects
+              {t("nav.projects")}
             </span>
           </CollapsibleTrigger>
           <button
