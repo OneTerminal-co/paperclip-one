@@ -66,6 +66,59 @@ Allow additional private hostnames (for example custom Tailscale hostnames):
 pnpm paperclipai allowed-hostname dotta-macbook-pro
 ```
 
+## Ollama Local Runtime (From This Repo)
+
+Recommended mode: Docker Compose (more reproducible than host install).
+
+If you do not have Ollama running yet, you can manage it directly from this repository.
+
+From repo root (Docker Compose):
+
+```sh
+pnpm ollama:docker:up
+pnpm ollama:docker:status
+pnpm ollama:docker:pull-models
+```
+
+Alternative (host-native install):
+
+```sh
+pnpm ollama:up
+pnpm ollama:status
+pnpm ollama:pull-models
+```
+
+Default pulled models are:
+
+- `gemma3:4b`
+- `gemma3:12b`
+
+To customize models:
+
+```sh
+OLLAMA_MODELS="qwen2.5-coder:7b gemma3:4b" pnpm ollama:pull-models
+```
+
+Run the local HTTP bridge used by Paperclip `http` agents:
+
+```sh
+PAPERCLIP_API_KEY=<agent-or-service-key> pnpm ollama:bridge
+```
+
+Bridge defaults:
+
+- bridge URL: `http://127.0.0.1:11435/invoke`
+- health: `http://127.0.0.1:11435/health`
+- Ollama host: `http://127.0.0.1:11434`
+- default model: `gemma3:4b`
+
+Stop local Ollama:
+
+```sh
+pnpm ollama:docker:down
+pnpm ollama:down
+```
+
 ## One-Command Local Run
 
 For a first-time local install, you can bootstrap and run in one command:
