@@ -1,5 +1,6 @@
 export { execute } from "./execute.js";
 export { testEnvironment } from "./test.js";
+export { listOllamaSkills, syncOllamaSkills } from "./skills.js";
 
 import type { AdapterSessionCodec } from "@paperclipai/adapter-utils";
 

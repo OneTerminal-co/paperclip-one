@@ -1,8 +1,18 @@
 import axios from "axios";
+import fs from "node:fs/promises";
+import path from "node:path";
 import type {
   AdapterExecutionContext,
   AdapterExecutionResult,
 } from "@paperclipai/adapter-utils";
+import {
+  asString,
+  joinPromptSections,
+  parseObject,
+  readPaperclipRuntimeSkillEntries,
+  renderTemplate,
+  resolvePaperclipDesiredSkillNames,
+} from "@paperclipai/adapter-utils/server-utils";
 import type { OllamaConfig, OllamaGenerateResponse } from "../types.js";
 
 export async function execute(
@@ -19,8 +29,7 @@ export async function execute(
   const startTime = Date.now();
 
   try {
-    // Extract prompt from agent context
-    const prompt = buildPrompt(ctx);
+    const prompt = await buildPrompt(ctx);
 
     if (!prompt) {
       return {
@@ -34,6 +43,19 @@ export async function execute(
     // Log execution start
     await ctx.onLog("stdout", `🚀 Executing with Ollama model: ${model}\n`);
     await ctx.onLog("stdout", `📍 Endpoint: ${endpoint}\n`);
+
+    if (ctx.onMeta) {
+      await ctx.onMeta({
+        adapterType: "ollama_local",
+        command: "ollama-http",
+        cwd: process.cwd(),
+        commandNotes: ["Using Ollama HTTP API"],
+        commandArgs: ["POST", `${endpoint}/api/generate`],
+        prompt,
+        promptMetrics: { promptChars: prompt.length },
+        context: ctx.context,
+      });
+    }
 
     // Call Ollama generate API
     const response = await axios.post<OllamaGenerateResponse>(
@@ -67,6 +89,7 @@ export async function execute(
         generatedTokens: result.eval_count ?? 0,
         durationMs,
       },
+      summary: responseText,
       provider: "ollama",
       model,
       billingType: "subscription_included",
@@ -106,22 +129,116 @@ export async function execute(
   }
 }
 
-function buildPrompt(ctx: AdapterExecutionContext): string {
-  // Extract task prompt from context
-  if (typeof ctx.context?.prompt === "string") {
-    return ctx.context.prompt;
+async function buildPrompt(ctx: AdapterExecutionContext): Promise<string> {
+  const config = parseObject(ctx.config);
+  const promptTemplate = asString(
+    config.promptTemplate,
+    "You are agent {{agent.id}} ({{agent.name}}). Continue your Paperclip work.",
+  );
+  const bootstrapPromptTemplate = asString(config.bootstrapPromptTemplate, "").trim();
+
+  const workspaceContext = parseObject(ctx.context.paperclipWorkspace);
+  const workspaceCwd = asString(workspaceContext.cwd, "").trim();
+  const configuredCwd = asString(config.cwd, "").trim();
+  const cwd = workspaceCwd || configuredCwd || process.cwd();
+
+  const instructionsFilePath = asString(config.instructionsFilePath, "").trim();
+  let instructionsPrefix = "";
+  if (instructionsFilePath.length > 0) {
+    const resolvedPath = path.resolve(cwd, instructionsFilePath);
+    try {
+      const instructionsContents = await fs.readFile(resolvedPath, "utf8");
+      const instructionsDir = `${path.dirname(resolvedPath)}/`;
+      instructionsPrefix =
+        `${instructionsContents}\n\n` +
+        `The above agent instructions were loaded from ${resolvedPath}. ` +
+        `Resolve any relative file references from ${instructionsDir}.\n\n`;
+    } catch (err) {
+      const reason = err instanceof Error ? err.message : String(err);
+      await ctx.onLog(
+        "stdout",
+        `[paperclip] Warning: could not read agent instructions file \"${resolvedPath}\": ${reason}\n`,
+      );
+    }
   }
 
-  const agent = ctx.agent;
-  const instructions = (ctx.config as any)?.instructions || "";
-  const task = (ctx.context as any)?.task || "";
-
-  if (instructions && task) {
-    return `${instructions}\n\nTask: ${task}`;
+  let skillsPromptSection = "";
+  const availableSkills = await readPaperclipRuntimeSkillEntries(config, import.meta.dirname);
+  const desiredSkills = resolvePaperclipDesiredSkillNames(config, availableSkills);
+  const desiredSet = new Set(desiredSkills);
+  const skillBlocks: string[] = [];
+  for (const skill of availableSkills) {
+    if (!desiredSet.has(skill.key)) continue;
+    try {
+      const markdown = await fs.readFile(path.join(skill.source, "SKILL.md"), "utf8");
+      skillBlocks.push(`## Skill: ${skill.runtimeName}\n${markdown}`);
+    } catch {
+      await ctx.onLog(
+        "stdout",
+        `[paperclip] Warning: could not load skill markdown for ${skill.key}\n`,
+      );
+    }
+  }
+  if (skillBlocks.length > 0) {
+    skillsPromptSection =
+      "The following skills are configured for this run. Use them as internal operating instructions.\n" +
+      "Do NOT summarize, review, or critique these skills in your response.\n" +
+      "Apply them only when relevant to the current task.\n\n" +
+      skillBlocks.join("\n\n---\n\n") +
+      "\n\n";
   }
 
-  if (task) return task;
-  if (instructions) return instructions;
+  const wakeReason = asString(ctx.context.wakeReason, "").trim();
+  const taskId = asString(ctx.context.taskId, "").trim();
+  const issueId = asString(ctx.context.issueId, "").trim();
+  const taskTitle =
+    asString((ctx.context as Record<string, unknown>).taskTitle, "").trim() ||
+    asString((ctx.context as Record<string, unknown>).issueTitle, "").trim();
+  const hasAssignedTask = taskId.length > 0 || issueId.length > 0 || taskTitle.length > 0;
 
-  return "Assist the user with their request.";
+  const executionContextSection = joinPromptSections([
+    "Execution context:",
+    wakeReason ? `- wakeReason: ${wakeReason}` : "",
+    taskId ? `- taskId: ${taskId}` : "",
+    issueId ? `- issueId: ${issueId}` : "",
+    taskTitle ? `- taskTitle: ${taskTitle}` : "",
+  ]).trim();
+
+  const noTaskDirective = !hasAssignedTask
+    ? "No concrete task is assigned in this run. Ask for a specific task in 1-2 concise sentences and stop."
+    : "";
+
+  const templateData = {
+    agentId: ctx.agent.id,
+    companyId: ctx.agent.companyId,
+    runId: ctx.runId,
+    company: { id: ctx.agent.companyId },
+    agent: ctx.agent,
+    run: { id: ctx.runId, source: "on_demand" },
+    context: ctx.context,
+  };
+
+  const renderedHeartbeatPrompt = renderTemplate(promptTemplate, templateData).trim();
+  const renderedBootstrapPrompt =
+    !ctx.runtime.sessionId && bootstrapPromptTemplate.length > 0
+      ? renderTemplate(bootstrapPromptTemplate, templateData).trim()
+      : "";
+  const sessionHandoffNote = asString(ctx.context.paperclipSessionHandoffMarkdown, "").trim();
+
+  const prompt = joinPromptSections([
+    instructionsPrefix,
+    skillsPromptSection,
+    executionContextSection,
+    renderedBootstrapPrompt,
+    sessionHandoffNote,
+    renderedHeartbeatPrompt,
+    noTaskDirective,
+  ]).trim();
+
+  if (prompt.length > 0) return prompt;
+  if (typeof ctx.context.prompt === "string" && ctx.context.prompt.trim().length > 0) {
+    return ctx.context.prompt.trim();
+  }
+
+  return "Continue your Paperclip work for the assigned task.";
 }

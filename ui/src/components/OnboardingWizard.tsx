@@ -64,6 +64,7 @@ type AdapterType =
   | "codex_local"
   | "gemini_local"
   | "hermes_local"
+  | "ollama_local"
   | "opencode_local"
   | "pi_local"
   | "cursor"
@@ -212,6 +213,7 @@ export function OnboardingWizard() {
     adapterType === "codex_local" ||
     adapterType === "gemini_local" ||
     adapterType === "hermes_local" ||
+    adapterType === "ollama_local" ||
     adapterType === "opencode_local" ||
     adapterType === "pi_local" ||
     adapterType === "cursor";
@@ -223,6 +225,8 @@ export function OnboardingWizard() {
         ? "gemini"
       : adapterType === "hermes_local"
         ? "hermes"
+      : adapterType === "ollama_local"
+      ? "ollama"
       : adapterType === "pi_local"
       ? "pi"
       : adapterType === "cursor"
@@ -852,6 +856,12 @@ export function OnboardingWizard() {
                             desc: "Local multi-provider agent"
                           },
                           {
+                            value: "ollama_local" as const,
+                            label: "Ollama",
+                            icon: Terminal,
+                            desc: "Local Ollama agent"
+                          },
+                          {
                             value: "pi_local" as const,
                             label: "Pi",
                             icon: Terminal,
@@ -901,6 +911,10 @@ export function OnboardingWizard() {
                                 setModel(DEFAULT_CURSOR_LOCAL_MODEL);
                                 return;
                               }
+                              if (nextType === "ollama_local" && !model) {
+                                setModel("gemma3:4b");
+                                return;
+                              }
                               if (nextType === "opencode_local") {
                                 if (!model.includes("/")) {
                                   setModel("");
@@ -929,6 +943,7 @@ export function OnboardingWizard() {
                     adapterType === "codex_local" ||
                     adapterType === "gemini_local" ||
                     adapterType === "hermes_local" ||
+                    adapterType === "ollama_local" ||
                     adapterType === "opencode_local" ||
                     adapterType === "pi_local" ||
                     adapterType === "cursor") && (
