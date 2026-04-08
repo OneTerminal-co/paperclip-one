@@ -50,5 +50,38 @@
   "languages": {
     "en": "English",
     "es": "Español"
+  },
+  "nav": {
+    "newIssue": "Nueva tarea",
+    "dashboard": "Panel",
+    "inbox": "Bandeja",
+    "work": "Trabajo",
+    "issues": "Tareas",
+    "routines": "Rutinas",
+    "goals": "Objetivos",
+    "projects": "Proyectos",
+    "agents": "Agentes",
+    "company": "Empresa",
+    "org": "Organización",
+    "skills": "Habilidades",
+    "costs": "Costos",
+    "activity": "Actividad",
+    "settings": "Configuración",
+    "selectCompany": "Seleccionar empresa",
+    "addProject": "Agregar proyecto",
+    "addAgent": "Agregar agente"
+  },
+  "org": {
+    "title": "Organigrama",
+    "importCompany": "Importar empresa",
+    "exportCompany": "Exportar empresa"
+  },
+  "issues": {
+    "title": "Tareas",
+    "newIssue": "Nueva tarea",
+    "noIssues": "Sin tareas aún"
+  },
+  "dashboard": {
+    "title": "Panel"
   }
 }

@@ -50,5 +50,38 @@
   "languages": {
     "en": "English",
     "es": "Español"
+  },
+  "nav": {
+    "newIssue": "New Issue",
+    "dashboard": "Dashboard",
+    "inbox": "Inbox",
+    "work": "Work",
+    "issues": "Issues",
+    "routines": "Routines",
+    "goals": "Goals",
+    "projects": "Projects",
+    "agents": "Agents",
+    "company": "Company",
+    "org": "Org",
+    "skills": "Skills",
+    "costs": "Costs",
+    "activity": "Activity",
+    "settings": "Settings",
+    "selectCompany": "Select company",
+    "addProject": "Add project",
+    "addAgent": "Add agent"
+  },
+  "org": {
+    "title": "Org Chart",
+    "importCompany": "Import company",
+    "exportCompany": "Export company"
+  },
+  "issues": {
+    "title": "Issues",
+    "newIssue": "New Issue",
+    "noIssues": "No issues yet"
+  },
+  "dashboard": {
+    "title": "Dashboard"
   }
 }
