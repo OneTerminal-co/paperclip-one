@@ -111,6 +111,7 @@ export function OnboardingWizard() {
   // Step 1
   const [companyName, setCompanyName] = useState("");
   const [companyGoal, setCompanyGoal] = useState("");
+  const [companyLanguage, setCompanyLanguage] = useState("");
 
   // Step 2
   const [agentName, setAgentName] = useState("CEO");
@@ -385,7 +386,7 @@ export function OnboardingWizard() {
     setLoading(true);
     setError(null);
     try {
-      const company = await companiesApi.create({ name: companyName.trim() });
+      const company = await companiesApi.create({ name: companyName.trim(), language: companyLanguage || null });
       setCreatedCompanyId(company.id);
       setCreatedCompanyPrefix(company.issuePrefix);
       setSelectedCompanyId(company.id);
@@ -723,6 +724,20 @@ export function OnboardingWizard() {
                       value={companyGoal}
                       onChange={(e) => setCompanyGoal(e.target.value)}
                     />
+                  </div>
+                  <div className="group">
+                    <label className="text-xs mb-1 block text-muted-foreground group-focus-within:text-foreground">
+                      Interface language (optional)
+                    </label>
+                    <select
+                      className="w-full rounded-md border border-border bg-transparent px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-ring"
+                      value={companyLanguage}
+                      onChange={(e) => setCompanyLanguage(e.target.value)}
+                    >
+                      <option value="">Auto</option>
+                      <option value="en">English</option>
+                      <option value="es">Español</option>
+                    </select>
                   </div>
                 </div>
               )}
