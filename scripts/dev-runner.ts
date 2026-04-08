@@ -1,7 +1,24 @@
 #!/usr/bin/env -S node --import tsx
 import { spawn } from "node:child_process";
-import { existsSync, mkdirSync, readdirSync, rmSync, statSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readdirSync, rmSync, statSync, writeFileSync, readFileSync } from "node:fs";
 import path from "node:path";
+
+// Load .env from repo root into process.env if it exists
+{
+  const envFile = path.join(import.meta.dirname ?? path.dirname(new URL(import.meta.url).pathname), "..", ".env");
+  if (existsSync(envFile)) {
+    const lines = readFileSync(envFile, "utf8").split("\n");
+    for (const line of lines) {
+      const trimmed = line.trim();
+      if (!trimmed || trimmed.startsWith("#")) continue;
+      const eq = trimmed.indexOf("=");
+      if (eq === -1) continue;
+      const key = trimmed.slice(0, eq).trim();
+      const val = trimmed.slice(eq + 1).trim().replace(/^["']|["']$/g, "");
+      if (key && !(key in process.env)) process.env[key] = val;
+    }
+  }
+}
 import { createInterface } from "node:readline/promises";
 import { stdin, stdout } from "node:process";
 import { shouldTrackDevServerPath } from "./dev-runner-paths.mjs";

@@ -107,6 +107,8 @@ This prevents lockout when a user migrates from long-running local trusted usage
 - `authenticated` uses Better Auth sessions and bootstrap invite flow
 - `local_trusted` ensures a real local Board user principal in `authUsers` with `instance_user_roles` admin access
 - company creation ensures creator membership in `company_memberships` so user assignment/access flows remain consistent
+- creator is assigned `membershipRole: "owner"`, which grants full permissions over that company without needing explicit `principal_permission_grants` rows
+- users added via the invite/join flow are assigned `membershipRole: "member"` and require explicit permission grants
 
 ## 9. Naming and Compatibility Policy
 
