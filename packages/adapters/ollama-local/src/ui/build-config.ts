@@ -21,8 +21,9 @@ export function buildOllamaConfig(
 
   return {
     endpoint: config.endpoint || "http://localhost:11434",
-    model: config.model || "gemma3:12b",
+    model: config.model || "gemma3:4b",
     temperature: config.temperature ?? 0.7,
     numPredict: config.numPredict ?? 2048,
+    maxSkillsPromptChars: 1200,
   };
 }

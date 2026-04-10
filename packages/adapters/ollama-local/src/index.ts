@@ -2,8 +2,8 @@ export const type = "ollama_local";
 export const label = "Ollama (Local, Zero Cost)";
 
 export const models = [
-  { id: "gemma3:12b", label: "Gemma3 12B (Recommended - Most Complete)" },
-  { id: "gemma3:4b", label: "Gemma3 4B (Fast, Lower Memory)" },
+  { id: "gemma3:4b", label: "Gemma3 4B (Recommended - Best local default)" },
+  { id: "gemma3:12b", label: "Gemma3 12B (Higher quality, needs >9GB RAM)" },
   { id: "mistral", label: "Mistral 7B" },
   { id: "llama2", label: "Llama2 7B" },
   { id: "neural-chat", label: "Neural Chat 7B" },
@@ -19,17 +19,20 @@ Run open-source LLMs locally with zero API costs using Ollama.
 
 ## Core Fields
 
-- **model** (string, optional): Model ID (default: "gemma3:12b")
+- **model** (string, optional): Model ID (default: "gemma3:4b")
 - **endpoint** (string, optional): Ollama HTTP endpoint (default: "http://localhost:11434")
 - **temperature** (number, optional): Temperature 0-1 (default: 0.7)
 - **numPredict** (number, optional): Max tokens to generate (default: 2048)
+- **requestTimeoutMs** (number, optional): Request timeout in ms (default: 900000)
+- **maxSkillsPromptChars** (number, optional): Max chars reserved for injected skills text (default: 1200)
+- **includeSkillMarkdown** (boolean, optional): Inject full skill markdown into prompt (default: false)
 - **topP** (number, optional): Top-p sampling (default: 0.9)
 - **topK** (number, optional): Top-k sampling (default: 40)
 
 ## Available Models
 
-- **gemma3:12b** (complete) - Recommended, best quality, ~7GB
-- **gemma3:4b** (fast) - Lower memory footprint, ~3.5GB
+- **gemma3:4b** (recommended) - Best compatibility on laptops, ~3.5GB
+- **gemma3:12b** (high quality) - Needs >9GB available RAM
 - **mistral** - Balanced performance, ~4GB
 - **llama2** - Strong reasoning, ~3.8GB
 - **neural-chat** - Conversation optimized, ~4GB

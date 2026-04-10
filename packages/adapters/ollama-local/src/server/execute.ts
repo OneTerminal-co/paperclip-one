@@ -22,9 +22,11 @@ export async function execute(
   const endpoint =
     config?.endpoint || process.env.OLLAMA_ENDPOINT || "http://localhost:11434";
   const model =
-    config?.model || process.env.OLLAMA_MODEL || "gemma3:12b";
+    config?.model || process.env.OLLAMA_MODEL || "gemma3:4b";
   const temperature = config?.temperature ?? parseFloat(process.env.OLLAMA_TEMPERATURE || "0.7");
   const numPredict = config?.numPredict ?? 2048;
+  const requestTimeoutMs =
+    config?.requestTimeoutMs ?? parseInt(process.env.OLLAMA_TIMEOUT_MS || "900000", 10);
 
   const startTime = Date.now();
 
@@ -67,7 +69,7 @@ export async function execute(
         temperature,
         num_predict: numPredict,
       },
-      { timeout: 300000 } // 5 minute timeout
+      { timeout: requestTimeoutMs }
     );
 
     const result = response.data;
@@ -102,11 +104,17 @@ export async function execute(
     if (axios.isAxiosError(error)) {
       if (error.code === "ECONNREFUSED") {
         errorMessage = `Connection refused to Ollama at ${endpoint}. Is it running? Try: pnpm ollama:docker:up`;
-      } else if (error.code === "ETIMEDOUT") {
+      } else if (error.code === "ETIMEDOUT" || error.code === "ECONNABORTED") {
         timedOut = true;
         errorMessage = "Ollama request timeout. Model inference may be slow.";
       } else if (error.response?.status === 404) {
         errorMessage = `Model '${model}' not found. Try: pnpm ollama:pull-models`;
+      } else if (typeof error.response?.data === "object" && error.response?.data !== null) {
+        const data = error.response.data as Record<string, unknown>;
+        const apiError = typeof data.error === "string" ? data.error : null;
+        errorMessage = apiError
+          ? `Ollama API error (${error.response.status}): ${apiError}`
+          : error.message;
       } else {
         errorMessage = error.message;
       }
@@ -131,6 +139,11 @@ export async function execute(
 
 async function buildPrompt(ctx: AdapterExecutionContext): Promise<string> {
   const config = parseObject(ctx.config);
+  const includeSkillMarkdown = parseBooleanLike(config.includeSkillMarkdown) ?? false;
+  const maxSkillsPromptChars =
+    parseIntegerLike(config.maxSkillsPromptChars) ??
+    parseIntegerLike(process.env.OLLAMA_MAX_SKILLS_PROMPT_CHARS) ??
+    1200;
   const promptTemplate = asString(
     config.promptTemplate,
     "You are agent {{agent.id}} ({{agent.name}}). Continue your Paperclip work.",
@@ -165,27 +178,41 @@ async function buildPrompt(ctx: AdapterExecutionContext): Promise<string> {
   let skillsPromptSection = "";
   const availableSkills = await readPaperclipRuntimeSkillEntries(config, import.meta.dirname);
   const desiredSkills = resolvePaperclipDesiredSkillNames(config, availableSkills);
-  const desiredSet = new Set(desiredSkills);
-  const skillBlocks: string[] = [];
-  for (const skill of availableSkills) {
-    if (!desiredSet.has(skill.key)) continue;
-    try {
-      const markdown = await fs.readFile(path.join(skill.source, "SKILL.md"), "utf8");
-      skillBlocks.push(`## Skill: ${skill.runtimeName}\n${markdown}`);
-    } catch {
-      await ctx.onLog(
-        "stdout",
-        `[paperclip] Warning: could not load skill markdown for ${skill.key}\n`,
-      );
+  if (desiredSkills.length > 0) {
+    if (includeSkillMarkdown) {
+      const desiredSet = new Set(desiredSkills);
+      const skillBlocks: string[] = [];
+      let skillsChars = 0;
+      for (const skill of availableSkills) {
+        if (!desiredSet.has(skill.key)) continue;
+        try {
+          const markdown = await fs.readFile(path.join(skill.source, "SKILL.md"), "utf8");
+          if (maxSkillsPromptChars <= 0) continue;
+          const block = `## Skill: ${skill.runtimeName}\n${markdown}`;
+          if (skillsChars + block.length > maxSkillsPromptChars) break;
+          skillBlocks.push(block);
+          skillsChars += block.length;
+        } catch {
+          await ctx.onLog(
+            "stdout",
+            `[paperclip] Warning: could not load skill markdown for ${skill.key}\n`,
+          );
+        }
+      }
+      if (skillBlocks.length > 0) {
+        skillsPromptSection =
+          "The following skills are configured for this run. Use them as internal operating instructions.\n" +
+          "Do NOT summarize, review, or critique these skills in your response.\n" +
+          "Apply them only when relevant to the current task.\n\n" +
+          skillBlocks.join("\n\n---\n\n") +
+          "\n\n";
+      }
+    } else {
+      skillsPromptSection =
+        "Configured skills (names only): " +
+        desiredSkills.join(", ") +
+        "\nUse them only as silent internal guidance. Never review or summarize them.\n\n";
     }
-  }
-  if (skillBlocks.length > 0) {
-    skillsPromptSection =
-      "The following skills are configured for this run. Use them as internal operating instructions.\n" +
-      "Do NOT summarize, review, or critique these skills in your response.\n" +
-      "Apply them only when relevant to the current task.\n\n" +
-      skillBlocks.join("\n\n---\n\n") +
-      "\n\n";
   }
 
   const wakeReason = asString(ctx.context.wakeReason, "").trim();
@@ -194,7 +221,13 @@ async function buildPrompt(ctx: AdapterExecutionContext): Promise<string> {
   const taskTitle =
     asString((ctx.context as Record<string, unknown>).taskTitle, "").trim() ||
     asString((ctx.context as Record<string, unknown>).issueTitle, "").trim();
+  const taskDescription =
+    asString((ctx.context as Record<string, unknown>).taskDescription, "").trim() ||
+    asString((ctx.context as Record<string, unknown>).issueDescription, "").trim();
   const hasAssignedTask = taskId.length > 0 || issueId.length > 0 || taskTitle.length > 0;
+
+  const normalizedTaskDescription =
+    taskDescription.length > 1200 ? `${taskDescription.slice(0, 1200)}...` : taskDescription;
 
   const executionContextSection = joinPromptSections([
     "Execution context:",
@@ -202,10 +235,23 @@ async function buildPrompt(ctx: AdapterExecutionContext): Promise<string> {
     taskId ? `- taskId: ${taskId}` : "",
     issueId ? `- issueId: ${issueId}` : "",
     taskTitle ? `- taskTitle: ${taskTitle}` : "",
+    normalizedTaskDescription ? `- taskDescription: ${normalizedTaskDescription}` : "",
   ]).trim();
 
   const noTaskDirective = !hasAssignedTask
     ? "No concrete task is assigned in this run. Ask for a specific task in 1-2 concise sentences and stop."
+    : "";
+  const taskResponseDirective = hasAssignedTask
+    ? [
+        "Response format requirements:",
+        "- Write in Spanish.",
+        "- Be concise and task-focused.",
+        "- Do not review documentation, skills, or memory systems.",
+        "- Do not ask follow-up questions.",
+        "- Do not claim that you executed actions unless they actually happened in this run.",
+        "- If no real action was executed, set 'Accion' to a concrete analysis/planning action.",
+        "- Use exactly these headings: 'Accion', 'Resultado', 'Siguiente paso'.",
+      ].join("\n")
     : "";
 
   const templateData = {
@@ -232,6 +278,7 @@ async function buildPrompt(ctx: AdapterExecutionContext): Promise<string> {
     renderedBootstrapPrompt,
     sessionHandoffNote,
     renderedHeartbeatPrompt,
+    taskResponseDirective,
     noTaskDirective,
   ]).trim();
 
@@ -241,4 +288,24 @@ async function buildPrompt(ctx: AdapterExecutionContext): Promise<string> {
   }
 
   return "Continue your Paperclip work for the assigned task.";
+}
+
+function parseIntegerLike(input: unknown): number | null {
+  if (typeof input === "number" && Number.isFinite(input)) {
+    return Math.trunc(input);
+  }
+  if (typeof input !== "string" || input.trim().length === 0) {
+    return null;
+  }
+  const parsed = Number.parseInt(input, 10);
+  return Number.isFinite(parsed) ? parsed : null;
+}
+
+function parseBooleanLike(input: unknown): boolean | null {
+  if (typeof input === "boolean") return input;
+  if (typeof input !== "string") return null;
+  const normalized = input.trim().toLowerCase();
+  if (normalized === "true") return true;
+  if (normalized === "false") return false;
+  return null;
 }

@@ -3,6 +3,9 @@ export interface OllamaConfig {
   model?: string;
   temperature?: number;
   numPredict?: number;
+  requestTimeoutMs?: number;
+  maxSkillsPromptChars?: number;
+  includeSkillMarkdown?: boolean;
   topP?: number;
   topK?: number;
 }
