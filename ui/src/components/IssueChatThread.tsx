@@ -1675,6 +1675,7 @@ const IssueChatComposer = forwardRef<IssueChatComposerHandle, IssueChatComposerP
         placeholder="Reply"
         mentions={mentions}
         onSubmit={handleSubmit}
+        submitOnEnter
         imageUploadHandler={onImageUpload}
         bordered
         contentClassName="min-h-[72px] max-h-[28dvh] overflow-y-auto pr-1 text-sm scrollbar-auto-hide"

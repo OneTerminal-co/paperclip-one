@@ -93,6 +93,8 @@ import {
 } from "@paperclipai/adapter-ollama-local";
 import {
   execute as bedrockExecute,
+  listBedrockSkills,
+  syncBedrockSkills,
   testEnvironment as bedrockTestEnvironment,
   sessionCodec as bedrockSessionCodec,
 } from "@paperclipai/adapter-bedrock-gateway/server";
@@ -230,7 +232,10 @@ const bedrockGatewayAdapter: ServerAdapterModule = {
   execute: bedrockExecute,
   testEnvironment: bedrockTestEnvironment,
   sessionCodec: bedrockSessionCodec,
+  listSkills: listBedrockSkills,
+  syncSkills: syncBedrockSkills,
   models: bedrockModels,
+  supportsLocalAgentJwt: true,
   agentConfigurationDoc: bedrockAgentConfigurationDoc,
 };
 

@@ -1,7 +1,7 @@
 import { readConfigFile } from "./config-file.js";
-import { existsSync, realpathSync } from "node:fs";
+import { existsSync, readFileSync, realpathSync } from "node:fs";
 import { resolve } from "node:path";
-import { config as loadDotenv } from "dotenv";
+import { parse as parseEnvFileContents } from "dotenv";
 import { resolvePaperclipEnvPath } from "./paths.js";
 import { maybeRepairLegacyWorktreeConfigAndEnvFiles } from "./worktree-config.js";
 import {
@@ -25,16 +25,32 @@ import {
 } from "./home-paths.js";
 
 const PAPERCLIP_ENV_FILE_PATH = resolvePaperclipEnvPath();
-if (existsSync(PAPERCLIP_ENV_FILE_PATH)) {
-  loadDotenv({ path: PAPERCLIP_ENV_FILE_PATH, override: false, quiet: true });
+const initialEnvKeys = new Set(Object.keys(process.env));
+
+function loadEnvFile(path: string) {
+  if (!existsSync(path)) return;
+  const parsed = parseEnvFileContents(readFileSync(path, "utf8"));
+  for (const [key, value] of Object.entries(parsed)) {
+    // Keep shell-exported values authoritative, while allowing later files
+    // (for example .env.local) to override earlier loaded env files.
+    if (initialEnvKeys.has(key)) continue;
+    process.env[key] = value;
+  }
 }
+
+loadEnvFile(PAPERCLIP_ENV_FILE_PATH);
 
 const CWD_ENV_PATH = resolve(process.cwd(), ".env");
 const isSameFile = existsSync(CWD_ENV_PATH) && existsSync(PAPERCLIP_ENV_FILE_PATH)
   ? realpathSync(CWD_ENV_PATH) === realpathSync(PAPERCLIP_ENV_FILE_PATH)
   : CWD_ENV_PATH === PAPERCLIP_ENV_FILE_PATH;
 if (!isSameFile && existsSync(CWD_ENV_PATH)) {
-  loadDotenv({ path: CWD_ENV_PATH, override: false, quiet: true });
+  loadEnvFile(CWD_ENV_PATH);
+}
+
+const CWD_ENV_LOCAL_PATH = resolve(process.cwd(), ".env.local");
+if (existsSync(CWD_ENV_LOCAL_PATH)) {
+  loadEnvFile(CWD_ENV_LOCAL_PATH);
 }
 
 maybeRepairLegacyWorktreeConfigAndEnvFiles();

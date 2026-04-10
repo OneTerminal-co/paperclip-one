@@ -50,6 +50,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@aws-sdk/client-bedrock-runtime": "^3.919.0",
     "@paperclipai/adapter-utils": "workspace:*"
   },
   "devDependencies": {

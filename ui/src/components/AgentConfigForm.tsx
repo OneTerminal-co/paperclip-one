@@ -405,10 +405,12 @@ export function AgentConfigForm(props: AgentConfigFormProps) {
     },
   });
 
+  const modelConfigKey = adapterType === "bedrock_gateway" ? "modelId" : "model";
+
   // Current model for display
   const currentModelId = isCreate
     ? val!.model
-    : eff("adapterConfig", "model", String(config.model ?? ""));
+    : eff("adapterConfig", modelConfigKey, String(config[modelConfigKey] ?? ""));
 
   const thinkingEffortKey =
     adapterType === "codex_local"
@@ -740,7 +742,7 @@ export function AgentConfigForm(props: AgentConfigFormProps) {
                 onChange={(v) =>
                   isCreate
                     ? set!({ model: v })
-                    : mark("adapterConfig", "model", v || undefined)
+                    : mark("adapterConfig", modelConfigKey, v || undefined)
                 }
                 open={modelOpen}
                 onOpenChange={setModelOpen}

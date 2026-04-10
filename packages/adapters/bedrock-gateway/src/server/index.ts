@@ -1,4 +1,5 @@
 export { execute } from "./execute.js";
+export { listBedrockSkills, syncBedrockSkills } from "./skills.js";
 export { testEnvironment } from "./test.js";
 export { parseBedrockResponse, describeBedrockFailure } from "./parse.js";
 import type { AdapterSessionCodec } from "@paperclipai/adapter-utils";

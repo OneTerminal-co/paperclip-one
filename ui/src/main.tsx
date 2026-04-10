@@ -26,7 +26,19 @@ initPluginBridge(React, ReactDOM);
 
 if ("serviceWorker" in navigator) {
   window.addEventListener("load", () => {
-    navigator.serviceWorker.register("/sw.js");
+    if (import.meta.env.PROD) {
+      navigator.serviceWorker.register("/sw.js").catch(() => {
+        // Ignore SW registration failures and keep app booting.
+      });
+      return;
+    }
+
+    // In local/dev workflows, stale SW caches can pin old JS bundles and blank the app.
+    void navigator.serviceWorker.getRegistrations().then((registrations) => {
+      for (const registration of registrations) {
+        void registration.unregister();
+      }
+    });
   });
 }
 

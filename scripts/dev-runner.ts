@@ -5,8 +5,15 @@ import path from "node:path";
 
 // Load .env from repo root into process.env if it exists
 {
-  const envFile = path.join(import.meta.dirname ?? path.dirname(new URL(import.meta.url).pathname), "..", ".env");
-  if (existsSync(envFile)) {
+  const repoRoot = path.join(import.meta.dirname ?? path.dirname(new URL(import.meta.url).pathname), "..");
+  const envFiles = [
+    path.join(repoRoot, ".env"),
+    path.join(repoRoot, ".env.local"),
+  ];
+  const initialEnvKeys = new Set(Object.keys(process.env));
+
+  for (const envFile of envFiles) {
+    if (!existsSync(envFile)) continue;
     const lines = readFileSync(envFile, "utf8").split("\n");
     for (const line of lines) {
       const trimmed = line.trim();
@@ -15,7 +22,8 @@ import path from "node:path";
       if (eq === -1) continue;
       const key = trimmed.slice(0, eq).trim();
       const val = trimmed.slice(eq + 1).trim().replace(/^["']|["']$/g, "");
-      if (key && !(key in process.env)) process.env[key] = val;
+      if (!key || initialEnvKeys.has(key)) continue;
+      process.env[key] = val;
     }
   }
 }
@@ -52,6 +60,7 @@ const watchedDirectories = [
 
 const watchedFiles = [
   ".env",
+  ".env.local",
   "package.json",
   "pnpm-workspace.yaml",
   "tsconfig.base.json",
