@@ -1,6 +1,6 @@
 import { ChangeEvent, useEffect, useState } from "react";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useTranslation } from "react-i18next";
+import { Link } from "@/lib/router";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { DEFAULT_FEEDBACK_DATA_SHARING_TERMS_VERSION } from "@paperclipai/shared";
 import { useCompany } from "../context/CompanyContext";
 import { useBreadcrumbs } from "../context/BreadcrumbContext";
@@ -36,14 +36,13 @@ export function CompanySettings() {
   const { setBreadcrumbs } = useBreadcrumbs();
   const { pushToast } = useToast();
   const queryClient = useQueryClient();
-  const { t } = useTranslation();
   // General settings local state
   const [companyName, setCompanyName] = useState("");
   const [description, setDescription] = useState("");
   const [brandColor, setBrandColor] = useState("");
   const [logoUrl, setLogoUrl] = useState("");
   const [logoUploadError, setLogoUploadError] = useState<string | null>(null);
-  const [companyLanguage, setCompanyLanguage] = useState("");
+  const [language, setLanguage] = useState<string>("en");
 
   // Sync local state from selected company
   useEffect(() => {
@@ -52,7 +51,7 @@ export function CompanySettings() {
     setDescription(selectedCompany.description ?? "");
     setBrandColor(selectedCompany.brandColor ?? "");
     setLogoUrl(selectedCompany.logoUrl ?? "");
-    setCompanyLanguage(selectedCompany.language ?? "");
+    setLanguage(selectedCompany.language ?? "en");
   }, [selectedCompany]);
 
   const [inviteError, setInviteError] = useState<string | null>(null);
@@ -64,15 +63,13 @@ export function CompanySettings() {
     !!selectedCompany &&
     (companyName !== selectedCompany.name ||
       description !== (selectedCompany.description ?? "") ||
-      brandColor !== (selectedCompany.brandColor ?? "") ||
-      companyLanguage !== (selectedCompany.language ?? ""));
+      brandColor !== (selectedCompany.brandColor ?? ""));
 
   const generalMutation = useMutation({
     mutationFn: (data: {
       name: string;
       description: string | null;
       brandColor: string | null;
-      language: string | null;
     }) => companiesApi.update(selectedCompanyId!, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.companies.all });
@@ -84,6 +81,14 @@ export function CompanySettings() {
       companiesApi.update(selectedCompanyId!, {
         requireBoardApprovalForNewAgents: requireApproval
       }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.companies.all });
+    }
+  });
+
+  const languageMutation = useMutation({
+    mutationFn: (lang: string) =>
+      companiesApi.update(selectedCompanyId!, { language: lang }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.companies.all });
     }
@@ -246,8 +251,7 @@ export function CompanySettings() {
     generalMutation.mutate({
       name: companyName.trim(),
       description: description.trim() || null,
-      brandColor: brandColor || null,
-      language: companyLanguage || null,
+      brandColor: brandColor || null
     });
   }
 
@@ -255,16 +259,16 @@ export function CompanySettings() {
     <div className="max-w-2xl space-y-6">
       <div className="flex items-center gap-2">
         <Settings className="h-5 w-5 text-muted-foreground" />
-        <h1 className="text-lg font-semibold">{t("settings.title")}</h1>
+        <h1 className="text-lg font-semibold">Company Settings</h1>
       </div>
 
       {/* General */}
       <div className="space-y-4">
         <div className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-          {t("settings.general")}
+          General
         </div>
         <div className="space-y-3 rounded-md border border-border px-4 py-4">
-          <Field label={t("settings.companyName")} hint={t("settings.companyNameHint")}>
+          <Field label="Company name" hint="The display name for your company.">
             <input
               className="w-full rounded-md border border-border bg-transparent px-2.5 py-1.5 text-sm outline-none"
               type="text"
@@ -273,35 +277,54 @@ export function CompanySettings() {
             />
           </Field>
           <Field
-            label={t("settings.description")}
-            hint={t("settings.descriptionHint")}
+            label="Description"
+            hint="Optional description shown in the company profile."
           >
             <input
               className="w-full rounded-md border border-border bg-transparent px-2.5 py-1.5 text-sm outline-none"
               type="text"
               value={description}
-              placeholder={t("settings.descriptionPlaceholder")}
+              placeholder="Optional company description"
               onChange={(e) => setDescription(e.target.value)}
             />
           </Field>
-          <Field label={t("settings.language")} hint={t("settings.languageHint")}>
+        </div>
+      </div>
+
+      {/* Language */}
+      <div className="space-y-4">
+        <div className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+          Language
+        </div>
+        <div className="space-y-3 rounded-md border border-border px-4 py-4">
+          <Field label="Company language" hint="Default language for the Paperclip interface.">
             <select
               className="w-full rounded-md border border-border bg-transparent px-2.5 py-1.5 text-sm outline-none"
-              value={companyLanguage}
-              onChange={(e) => setCompanyLanguage(e.target.value)}
+              value={language}
+              onChange={(e) => {
+                const newLang = e.target.value;
+                setLanguage(newLang);
+                languageMutation.mutate(newLang);
+              }}
             >
-              <option value="">Auto</option>
               <option value="en">English</option>
               <option value="es">Español</option>
             </select>
           </Field>
+          {languageMutation.isError && (
+            <span className="text-xs text-destructive">
+              {languageMutation.error instanceof Error
+                ? languageMutation.error.message
+                : "Failed to update language"}
+            </span>
+          )}
         </div>
       </div>
 
       {/* Appearance */}
       <div className="space-y-4">
         <div className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-          {t("settings.appearance")}
+          Appearance
         </div>
         <div className="space-y-3 rounded-md border border-border px-4 py-4">
           <div className="flex items-start gap-4">
@@ -315,8 +338,8 @@ export function CompanySettings() {
             </div>
             <div className="flex-1 space-y-3">
               <Field
-                label={t("settings.logo")}
-                hint={t("settings.logoHint")}
+                label="Logo"
+                hint="Upload a PNG, JPEG, WEBP, GIF, or SVG logo image."
               >
                 <div className="space-y-2">
                   <input
@@ -333,7 +356,7 @@ export function CompanySettings() {
                         onClick={handleClearLogo}
                         disabled={clearLogoMutation.isPending}
                       >
-                        {clearLogoMutation.isPending ? t("settings.removing") : t("settings.removeLogo")}
+                        {clearLogoMutation.isPending ? "Removing..." : "Remove logo"}
                       </Button>
                     </div>
                   )}
@@ -351,13 +374,13 @@ export function CompanySettings() {
                     </span>
                   )}
                   {logoUploadMutation.isPending && (
-                    <span className="text-xs text-muted-foreground">{t("settings.uploadingLogo")}</span>
+                    <span className="text-xs text-muted-foreground">Uploading logo...</span>
                   )}
                 </div>
               </Field>
               <Field
-                label={t("settings.brandColor")}
-                hint={t("settings.brandColorHint")}
+                label="Brand color"
+                hint="Sets the hue for the company icon. Leave empty for auto-generated color."
               >
                 <div className="flex items-center gap-2">
                   <input
@@ -375,7 +398,7 @@ export function CompanySettings() {
                         setBrandColor(v);
                       }
                     }}
-                    placeholder={t("settings.brandColorPlaceholder")}
+                    placeholder="Auto"
                     className="w-28 rounded-md border border-border bg-transparent px-2.5 py-1.5 text-sm font-mono outline-none"
                   />
                   {brandColor && (
@@ -385,7 +408,7 @@ export function CompanySettings() {
                       onClick={() => setBrandColor("")}
                       className="text-xs text-muted-foreground"
                     >
-                      {t("settings.clearColor")}
+                      Clear
                     </Button>
                   )}
                 </div>
@@ -403,10 +426,10 @@ export function CompanySettings() {
             onClick={handleSaveGeneral}
             disabled={generalMutation.isPending || !companyName.trim()}
           >
-            {generalMutation.isPending ? t("settings.saving") : t("settings.save")}
+            {generalMutation.isPending ? "Saving..." : "Save changes"}
           </Button>
           {generalMutation.isSuccess && (
-            <span className="text-xs text-muted-foreground">{t("settings.saved")}</span>
+            <span className="text-xs text-muted-foreground">Saved</span>
           )}
           {generalMutation.isError && (
             <span className="text-xs text-destructive">
@@ -421,12 +444,12 @@ export function CompanySettings() {
       {/* Hiring */}
       <div className="space-y-4" data-testid="company-settings-team-section">
         <div className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-          {t("settings.hiring")}
+          Hiring
         </div>
         <div className="rounded-md border border-border px-4 py-3">
           <ToggleField
-            label={t("settings.requireApproval")}
-            hint={t("settings.requireApprovalHint")}
+            label="Require board approval for new hires"
+            hint="New agent hires stay pending until approved by board."
             checked={!!selectedCompany.requireBoardApprovalForNewAgents}
             onChange={(v) => settingsMutation.mutate(v)}
             toggleTestId="company-settings-team-approval-toggle"
@@ -436,7 +459,7 @@ export function CompanySettings() {
 
       <div className="space-y-4">
         <div className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-          {t("settings.feedbackSharing")}
+          Feedback Sharing
         </div>
         <div className="space-y-3 rounded-md border border-border px-4 py-4">
           <ToggleField
@@ -476,18 +499,10 @@ export function CompanySettings() {
         </div>
       </div>
 
-      {/* Members */}
-      <div className="space-y-4">
-        <div className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-          {t("settings.members")}
-        </div>
-        <MembersList companyId={selectedCompanyId!} />
-      </div>
-
       {/* Invites */}
       <div className="space-y-4" data-testid="company-settings-invites-section">
         <div className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-          {t("settings.invites")}
+          Invites
         </div>
         <div className="space-y-3 rounded-md border border-border px-4 py-4">
           <div className="flex items-center gap-1.5">
@@ -565,7 +580,7 @@ export function CompanySettings() {
       {/* Import / Export */}
       <div className="space-y-4">
         <div className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-          {t("settings.companyPackages")}
+          Company Packages
         </div>
         <div className="rounded-md border border-border px-4 py-4">
           <p className="text-sm text-muted-foreground">
@@ -574,16 +589,16 @@ export function CompanySettings() {
           </p>
           <div className="mt-3 flex items-center gap-2">
             <Button size="sm" variant="outline" asChild>
-              <a href="/company/export">
+              <Link to="/company/export">
                 <Download className="mr-1.5 h-3.5 w-3.5" />
                 Export
-              </a>
+              </Link>
             </Button>
             <Button size="sm" variant="outline" asChild>
-              <a href="/company/import">
+              <Link to="/company/import">
                 <Upload className="mr-1.5 h-3.5 w-3.5" />
                 Import
-              </a>
+              </Link>
             </Button>
           </div>
         </div>
@@ -592,7 +607,7 @@ export function CompanySettings() {
       {/* Danger Zone */}
       <div className="space-y-4">
         <div className="text-xs font-medium text-destructive uppercase tracking-wide">
-          {t("settings.dangerZone")}
+          Danger Zone
         </div>
         <div className="space-y-3 rounded-md border border-destructive/40 bg-destructive/5 px-4 py-4">
           <p className="text-sm text-muted-foreground">
@@ -626,10 +641,10 @@ export function CompanySettings() {
               }}
             >
               {archiveMutation.isPending
-                ? t("settings.archiving")
+                ? "Archiving..."
                 : selectedCompany.status === "archived"
-                ? t("settings.alreadyArchived")
-                : t("settings.archiveCompany")}
+                ? "Already archived"
+                : "Archive company"}
             </Button>
             {archiveMutation.isError && (
               <span className="text-xs text-destructive">
@@ -641,61 +656,6 @@ export function CompanySettings() {
           </div>
         </div>
       </div>
-    </div>
-  );
-}
-
-function MembersList({ companyId }: { companyId: string }) {
-  const { t } = useTranslation();
-  const { data: members, isLoading, isError } = useQuery({
-    queryKey: queryKeys.companyMembers(companyId),
-    queryFn: () => accessApi.getMembers(companyId),
-    enabled: !!companyId,
-  });
-
-  if (isLoading) {
-    return (
-      <div className="rounded-md border border-border px-4 py-3 text-sm text-muted-foreground">
-        {t("settings.loadingMembers")}
-      </div>
-    );
-  }
-
-  if (isError || !members) {
-    return (
-      <div className="rounded-md border border-border px-4 py-3 text-sm text-muted-foreground">
-        {t("settings.couldNotLoadMembers")}
-      </div>
-    );
-  }
-
-  const userMembers = members.filter((m) => m.principalType === "user");
-
-  if (userMembers.length === 0) {
-    return (
-      <div className="rounded-md border border-border px-4 py-3 text-sm text-muted-foreground">
-        {t("settings.noHumanMembers")}
-      </div>
-    );
-  }
-
-  return (
-    <div className="rounded-md border border-border divide-y divide-border">
-      {userMembers.map((member) => (
-        <div key={member.id} className="flex items-center justify-between px-4 py-2.5">
-          <span className="text-sm font-mono text-muted-foreground truncate">{member.principalId}</span>
-          <span
-            className={[
-              "ml-3 shrink-0 rounded-full px-2 py-0.5 text-xs font-medium",
-              member.membershipRole === "owner"
-                ? "bg-primary/10 text-primary"
-                : "bg-muted text-muted-foreground",
-            ].join(" ")}
-          >
-            {member.membershipRole === "owner" ? t("settings.owner") : t("settings.member")}
-          </span>
-        </div>
-      ))}
     </div>
   );
 }

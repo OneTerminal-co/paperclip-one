@@ -207,7 +207,7 @@ describe("CommentThread", () => {
     const approval: Approval = {
       id: "approval-1",
       companyId: "company-1",
-      type: "request_board_approval",
+      type: "approve_ceo_strategy",
       requestedByAgentId: "agent-1",
       requestedByUserId: null,
       status: "pending",
@@ -239,7 +239,7 @@ describe("CommentThread", () => {
 
     const approvalRow = container.querySelector("#approval-approval-1") as HTMLDivElement | null;
     expect(approvalRow).not.toBeNull();
-    expect(container.textContent).toContain("request_board_approval");
+    expect(container.textContent).toContain("approve_ceo_strategy");
     expect(container.textContent).toContain("Approve hosting spend");
     expect(container.textContent).toContain("Approve");
     expect(container.textContent).toContain("Reject");

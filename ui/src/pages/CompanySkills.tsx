@@ -30,7 +30,6 @@ import {
 } from "@/components/ui/dialog";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "../lib/utils";
-import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -53,6 +52,7 @@ import {
   RefreshCw,
   Save,
   Search,
+  Trash2,
 } from "lucide-react";
 
 type SkillTreeNode = {
@@ -250,7 +250,6 @@ function NewSkillForm({
   isPending: boolean;
   onCancel: () => void;
 }) {
-  const { t } = useTranslation();
   const [name, setName] = useState("");
   const [slug, setSlug] = useState("");
   const [description, setDescription] = useState("");
@@ -278,14 +277,14 @@ function NewSkillForm({
         />
         <div className="flex items-center justify-end gap-2">
           <Button variant="ghost" size="sm" onClick={onCancel} disabled={isPending}>
-            {t("skills.cancel")}
+            Cancel
           </Button>
           <Button
             size="sm"
             onClick={() => onCreate({ name, slug: slug || null, description: description || null })}
             disabled={isPending || name.trim().length === 0}
           >
-            {isPending ? t("skills.creating") : t("skills.create")}
+            {isPending ? "Creating..." : "Create skill"}
           </Button>
         </div>
       </div>
@@ -404,7 +403,6 @@ function SkillList({
   onSelectSkill: (skillId: string) => void;
   onSelectPath: (skillId: string, path: string) => void;
 }) {
-  const { t } = useTranslation();
   const filteredSkills = skills.filter((skill) => {
     const haystack = `${skill.name} ${skill.key} ${skill.slug} ${skill.sourceLabel ?? ""}`.toLowerCase();
     return haystack.includes(skillFilter.toLowerCase());
@@ -413,7 +411,7 @@ function SkillList({
   if (filteredSkills.length === 0) {
     return (
       <div className="px-4 py-6 text-sm text-muted-foreground">
-        {t("skills.noMatch")}
+        No skills match this filter.
       </div>
     );
   }
@@ -506,6 +504,8 @@ function SkillPane({
   checkUpdatesPending,
   onInstallUpdate,
   installUpdatePending,
+  onDelete,
+  deletePending,
   onSave,
   savePending,
 }: {
@@ -525,11 +525,12 @@ function SkillPane({
   checkUpdatesPending: boolean;
   onInstallUpdate: () => void;
   installUpdatePending: boolean;
+  onDelete: () => void;
+  deletePending: boolean;
   onSave: () => void;
   savePending: boolean;
 }) {
   const { pushToast } = useToast();
-  const { t } = useTranslation();
 
   if (!detail) {
     if (loading) {
@@ -538,7 +539,7 @@ function SkillPane({
     return (
       <EmptyState
         icon={Boxes}
-        message={t("skills.selectSkill")}
+        message="Select a skill to inspect its files."
       />
     );
   }
@@ -549,6 +550,10 @@ function SkillPane({
   const body = file?.markdown ? stripFrontmatter(file.content) : file?.content ?? "";
   const currentPin = shortRef(detail.sourceRef);
   const latestPin = shortRef(updateStatus?.latestRef);
+  const removeBlocked = usedBy.length > 0;
+  const removeDisabledReason = removeBlocked
+    ? "Detach this skill from all agents before removing it."
+    : null;
 
   return (
     <div className="min-w-0">
@@ -563,17 +568,29 @@ function SkillPane({
               <p className="mt-2 max-w-3xl text-sm text-muted-foreground">{detail.description}</p>
             )}
           </div>
-          {detail.editable ? (
-            <button
-              className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground"
-              onClick={() => setEditMode(!editMode)}
+          <div className="flex flex-wrap items-center justify-end gap-2">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={onDelete}
+              disabled={deletePending}
+              title={removeDisabledReason ?? undefined}
             >
-              <Pencil className="h-3.5 w-3.5" />
-              {editMode ? t("skills.stopEditing") : t("skills.edit")}
-            </button>
-          ) : (
-            <div className="text-sm text-muted-foreground">{detail.editableReason}</div>
-          )}
+              <Trash2 className="mr-1.5 h-3.5 w-3.5" />
+              {deletePending ? "Removing..." : "Remove"}
+            </Button>
+            {detail.editable ? (
+              <button
+                className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground"
+                onClick={() => setEditMode(!editMode)}
+              >
+                <Pencil className="h-3.5 w-3.5" />
+                {editMode ? "Stop editing" : "Edit"}
+              </button>
+            ) : (
+              <div className="text-sm text-muted-foreground">{detail.editableReason}</div>
+            )}
+          </div>
         </div>
 
         <div className="mt-4 space-y-3 border-t border-border pt-4 text-sm">
@@ -587,7 +604,7 @@ function SkillPane({
                     className="truncate hover:text-foreground text-muted-foreground transition-colors cursor-pointer"
                     onClick={() => {
                       navigator.clipboard.writeText(detail.sourcePath!);
-                      pushToast({ title: t("skills.toast.copiedPath") });
+                      pushToast({ title: "Copied path to workspace" });
                     }}
                   >
                     {source.label}
@@ -611,7 +628,7 @@ function SkillPane({
                   disabled={checkUpdatesPending || updateStatusLoading}
                 >
                   <RefreshCw className={cn("mr-1.5 h-3.5 w-3.5", (checkUpdatesPending || updateStatusLoading) && "animate-spin")} />
-                  {t("skills.checkUpdates")}
+                  Check for updates
                 </Button>
                 {updateStatus?.supported && updateStatus.hasUpdate && (
                   <Button
@@ -624,7 +641,7 @@ function SkillPane({
                   </Button>
                 )}
                 {updateStatus?.supported && !updateStatus.hasUpdate && !updateStatusLoading && (
-                  <span className="text-xs text-muted-foreground">{t("skills.upToDate")}</span>
+                  <span className="text-xs text-muted-foreground">Up to date</span>
                 )}
                 {!updateStatus?.supported && updateStatus?.reason && (
                   <span className="text-xs text-muted-foreground">{updateStatus.reason}</span>
@@ -637,13 +654,13 @@ function SkillPane({
             </div>
             <div className="flex items-center gap-2">
               <span className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground">Mode</span>
-              <span>{detail.editable ? t("skills.editable") : t("skills.readOnly")}</span>
+              <span>{detail.editable ? "Editable" : "Read only"}</span>
             </div>
           </div>
           <div className="flex flex-wrap items-start gap-x-3 gap-y-1">
             <span className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground">Used by</span>
             {usedBy.length === 0 ? (
-              <span className="text-muted-foreground">{t("skills.noAgentsAttached")}</span>
+              <span className="text-muted-foreground">No agents attached</span>
             ) : (
               <div className="flex flex-wrap gap-x-3 gap-y-1">
                 {usedBy.map((agent) => (
@@ -675,7 +692,7 @@ function SkillPane({
                 >
                   <span className="flex items-center gap-1.5">
                     <Eye className="h-3.5 w-3.5" />
-                    {t("skills.viewMode")}
+                    View
                   </span>
                 </button>
                 <button
@@ -684,7 +701,7 @@ function SkillPane({
                 >
                   <span className="flex items-center gap-1.5">
                     <Code2 className="h-3.5 w-3.5" />
-                    {t("skills.codeMode")}
+                    Code
                   </span>
                 </button>
               </div>
@@ -692,11 +709,11 @@ function SkillPane({
             {editMode && file?.editable && (
               <>
                 <Button variant="ghost" size="sm" onClick={() => setEditMode(false)} disabled={savePending}>
-                  {t("skills.cancel")}
+                  Cancel
                 </Button>
                 <Button size="sm" onClick={onSave} disabled={savePending}>
                   <Save className="mr-1.5 h-3.5 w-3.5" />
-                  {savePending ? t("skills.saving") : t("skills.save")}
+                  {savePending ? "Saving..." : "Save"}
                 </Button>
               </>
             )}
@@ -708,7 +725,7 @@ function SkillPane({
         {fileLoading ? (
           <PageSkeleton variant="detail" />
         ) : !file ? (
-          <div className="text-sm text-muted-foreground">{t("skills.selectFile")}</div>
+          <div className="text-sm text-muted-foreground">Select a file to inspect.</div>
         ) : editMode && file.editable ? (
           file.markdown ? (
             <MarkdownEditor
@@ -727,7 +744,7 @@ function SkillPane({
         ) : file.markdown && viewMode === "preview" ? (
           <MarkdownBody>{body}</MarkdownBody>
         ) : (
-          <pre className="overflow-x-auto whitespace-pre-wrap break-words border-0 bg-transparent p-0 font-mono text-sm text-foreground">
+          <pre className="overflow-x-auto whitespace-pre-wrap wrap-break-word border-0 bg-transparent p-0 font-mono text-sm text-foreground">
             <code>{file.content}</code>
           </pre>
         )}
@@ -743,7 +760,6 @@ export function CompanySkills() {
   const { selectedCompanyId } = useCompany();
   const { setBreadcrumbs } = useBreadcrumbs();
   const { pushToast } = useToast();
-  const { t } = useTranslation();
   const [skillFilter, setSkillFilter] = useState("");
   const [source, setSource] = useState("");
   const [createOpen, setCreateOpen] = useState(false);
@@ -756,6 +772,9 @@ export function CompanySkills() {
   const [displayedDetail, setDisplayedDetail] = useState<CompanySkillDetail | null>(null);
   const [displayedFile, setDisplayedFile] = useState<CompanySkillFileDetail | null>(null);
   const [scanStatusMessage, setScanStatusMessage] = useState<string | null>(null);
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [deleteTargetSkillId, setDeleteTargetSkillId] = useState<string | null>(null);
+  const [deleteTargetDetail, setDeleteTargetDetail] = useState<CompanySkillDetail | null>(null);
   const parsedRoute = useMemo(() => parseSkillRoute(routePath), [routePath]);
   const routeSkillId = parsedRoute.skillId;
   const selectedPath = parsedRoute.filePath;
@@ -853,6 +872,20 @@ export function CompanySkills() {
   const activeDetail = detailQuery.data ?? displayedDetail;
   const activeFile = fileQuery.data ?? displayedFile;
 
+  function openDeleteDialog() {
+    setDeleteTargetSkillId(selectedSkillId);
+    setDeleteTargetDetail(activeDetail ?? null);
+    setDeleteOpen(true);
+  }
+
+  function closeDeleteDialog(open: boolean) {
+    setDeleteOpen(open);
+    if (!open) {
+      setDeleteTargetSkillId(null);
+      setDeleteTargetDetail(null);
+    }
+  }
+
   const importSkill = useMutation({
     mutationFn: (importSource: string) => companySkillsApi.importFromSource(selectedCompanyId!, importSource),
     onSuccess: async (result) => {
@@ -860,19 +893,19 @@ export function CompanySkills() {
       if (result.imported[0]) navigate(skillRoute(result.imported[0].id));
       pushToast({
         tone: "success",
-        title: t("skills.toast.imported"),
+        title: "Skills imported",
         body: `${result.imported.length} skill${result.imported.length === 1 ? "" : "s"} added.`,
       });
       if (result.warnings[0]) {
-        pushToast({ tone: "warn", title: t("skills.toast.importWarnings"), body: result.warnings[0] });
+        pushToast({ tone: "warn", title: "Import warnings", body: result.warnings[0] });
       }
       setSource("");
     },
     onError: (error) => {
       pushToast({
         tone: "error",
-        title: t("skills.toast.importFailed"),
-        body: error instanceof Error ? error.message : t("skills.toast.importFailedBody"),
+        title: "Skill import failed",
+        body: error instanceof Error ? error.message : "Failed to import skill source.",
       });
     },
   });
@@ -885,15 +918,15 @@ export function CompanySkills() {
       setCreateOpen(false);
       pushToast({
         tone: "success",
-        title: t("skills.toast.created"),
+        title: "Skill created",
         body: `${skill.name} is now editable in the Paperclip workspace.`,
       });
     },
     onError: (error) => {
       pushToast({
         tone: "error",
-        title: t("skills.toast.createFailed"),
-        body: error instanceof Error ? error.message : t("skills.toast.createFailedBody"),
+        title: "Skill creation failed",
+        body: error instanceof Error ? error.message : "Failed to create skill.",
       });
     },
   });
@@ -901,28 +934,28 @@ export function CompanySkills() {
   const scanProjects = useMutation({
     mutationFn: () => companySkillsApi.scanProjects(selectedCompanyId!),
     onMutate: () => {
-      setScanStatusMessage(t("skills.toast.scanning"));
+      setScanStatusMessage("Scanning project workspaces for skills...");
     },
     onSuccess: async (result) => {
-      setScanStatusMessage(t("skills.toast.refreshing"));
+      setScanStatusMessage("Refreshing skills list...");
       await queryClient.invalidateQueries({ queryKey: queryKeys.companySkills.list(selectedCompanyId!) });
       const summary = formatProjectScanSummary(result);
       setScanStatusMessage(summary);
       pushToast({
         tone: "success",
-        title: t("skills.toast.scanComplete"),
+        title: "Project skill scan complete",
         body: summary,
       });
       if (result.conflicts[0]) {
         pushToast({
           tone: "warn",
-          title: t("skills.toast.scanConflicts"),
+          title: "Skill conflicts found",
           body: result.conflicts[0].reason,
         });
       } else if (result.warnings[0]) {
         pushToast({
           tone: "warn",
-          title: t("skills.toast.scanWarnings"),
+          title: "Scan warnings",
           body: result.warnings[0],
         });
       }
@@ -931,8 +964,8 @@ export function CompanySkills() {
       setScanStatusMessage(null);
       pushToast({
         tone: "error",
-        title: t("skills.toast.scanFailed"),
-        body: error instanceof Error ? error.message : t("skills.toast.scanFailedBody"),
+        title: "Project skill scan failed",
+        body: error instanceof Error ? error.message : "Failed to scan project workspaces.",
       });
     },
   });
@@ -954,15 +987,15 @@ export function CompanySkills() {
       setEditMode(false);
       pushToast({
         tone: "success",
-        title: t("skills.toast.saved"),
+        title: "Skill saved",
         body: result.path,
       });
     },
     onError: (error) => {
       pushToast({
         tone: "error",
-        title: t("skills.toast.saveFailed"),
-        body: error instanceof Error ? error.message : t("skills.toast.saveFailedBody"),
+        title: "Save failed",
+        body: error instanceof Error ? error.message : "Failed to save skill file.",
       });
     },
   });
@@ -979,21 +1012,59 @@ export function CompanySkills() {
       navigate(skillRoute(skill.id, selectedPath));
       pushToast({
         tone: "success",
-        title: t("skills.toast.updated"),
+        title: "Skill updated",
         body: skill.sourceRef ? `Pinned to ${shortRef(skill.sourceRef)}` : skill.name,
       });
     },
     onError: (error) => {
       pushToast({
         tone: "error",
-        title: t("skills.toast.updateFailed"),
-        body: error instanceof Error ? error.message : t("skills.toast.updateFailedBody"),
+        title: "Update failed",
+        body: error instanceof Error ? error.message : "Failed to install skill update.",
+      });
+    },
+  });
+
+  const deleteSkill = useMutation({
+    mutationFn: () => companySkillsApi.delete(selectedCompanyId!, deleteTargetSkillId!),
+    onSuccess: async (skill) => {
+      closeDeleteDialog(false);
+      setDisplayedDetail(null);
+      setDisplayedFile(null);
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: queryKeys.companySkills.list(selectedCompanyId!) }),
+        ...(deleteTargetSkillId ? [
+          queryClient.invalidateQueries({ queryKey: queryKeys.companySkills.detail(selectedCompanyId!, deleteTargetSkillId) }),
+          queryClient.invalidateQueries({ queryKey: queryKeys.companySkills.updateStatus(selectedCompanyId!, deleteTargetSkillId) }),
+        ] : []),
+        ...(deleteTargetSkillId ? [
+          queryClient.invalidateQueries({
+            queryKey: queryKeys.companySkills.file(selectedCompanyId!, deleteTargetSkillId, selectedPath),
+          }),
+        ] : []),
+      ]);
+      await queryClient.refetchQueries({
+        queryKey: queryKeys.companySkills.list(selectedCompanyId!),
+        type: "active",
+      });
+      navigate("/skills", { replace: true });
+      pushToast({
+        tone: "success",
+        title: "Skill removed",
+        body: `${skill.name} was removed from the company skill library.`,
+      });
+    },
+    onError: (error) => {
+      pushToast({
+        tone: "error",
+        title: "Remove failed",
+        body: error instanceof Error ? error.message : "Failed to remove skill.",
       });
     },
   });
 
   if (!selectedCompanyId) {
-    return <EmptyState icon={Boxes} message={t("skills.selectCompany")} />;
+    return <EmptyState icon={Boxes} message="Select a company to manage skills." />;
   }
 
   function handleAddSkillSource() {
@@ -1007,6 +1078,54 @@ export function CompanySkills() {
 
   return (
     <>
+      <Dialog open={deleteOpen} onOpenChange={closeDeleteDialog}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Remove skill</DialogTitle>
+            <DialogDescription>
+              Remove this skill from the company library. If any agents still use it, removal will be blocked until it is detached.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3 text-sm">
+            <p>
+              {deleteTargetDetail
+                ? `You are about to remove ${deleteTargetDetail.name}.`
+                : "You are about to remove this skill."}
+            </p>
+            {deleteTargetDetail?.usedByAgents?.length ? (
+              <div className="rounded-md border border-border px-3 py-3 text-muted-foreground">
+                Currently used by {deleteTargetDetail.usedByAgents.map((agent) => agent.name).join(", ")}.
+              </div>
+            ) : null}
+            {(deleteTargetDetail?.usedByAgents.length ?? 0) > 0 ? (
+              <p className="text-muted-foreground">
+                Detach this skill from all agents to enable removal.
+              </p>
+            ) : null}
+          </div>
+          <DialogFooter>
+            {(deleteTargetDetail?.usedByAgents.length ?? 0) > 0 ? (
+              <Button variant="ghost" onClick={() => closeDeleteDialog(false)}>
+                Close
+              </Button>
+            ) : (
+              <>
+                <Button variant="ghost" onClick={() => closeDeleteDialog(false)} disabled={deleteSkill.isPending}>
+                  Cancel
+                </Button>
+                <Button
+                  variant="destructive"
+                  onClick={() => deleteSkill.mutate()}
+                  disabled={deleteSkill.isPending || !deleteTargetSkillId}
+                >
+                  {deleteSkill.isPending ? "Removing..." : "Remove skill"}
+                </Button>
+              </>
+            )}
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       <Dialog open={emptySourceHelpOpen} onOpenChange={setEmptySourceHelpOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
@@ -1023,9 +1142,9 @@ export function CompanySkills() {
               className="flex items-start justify-between rounded-md border border-border px-3 py-3 text-foreground no-underline transition-colors hover:bg-accent/40"
             >
               <span>
-                <span className="block font-medium">{t("skills.helpDialog.browseTitle")}</span>
+                <span className="block font-medium">Browse skills.sh</span>
                 <span className="mt-1 block text-muted-foreground">
-                  {t("skills.helpDialog.browseBody")}
+                  Find install commands and paste one here.
                 </span>
               </span>
               <ExternalLink className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
@@ -1037,9 +1156,9 @@ export function CompanySkills() {
               className="flex items-start justify-between rounded-md border border-border px-3 py-3 text-foreground no-underline transition-colors hover:bg-accent/40"
             >
               <span>
-                <span className="block font-medium">{t("skills.helpDialog.githubTitle")}</span>
+                <span className="block font-medium">Search GitHub</span>
                 <span className="mt-1 block text-muted-foreground">
-                  {t("skills.helpDialog.githubBody")}
+                  Look for repositories with `SKILL.md`, then paste the repo URL here.
                 </span>
               </span>
               <ExternalLink className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
@@ -1054,7 +1173,7 @@ export function CompanySkills() {
           <div className="border-b border-border px-4 py-3">
             <div className="flex items-center justify-between gap-2">
               <div>
-                <h1 className="text-base font-semibold">{t("skills.title")}</h1>
+                <h1 className="text-base font-semibold">Skills</h1>
                 <p className="text-xs text-muted-foreground">
                   {skillsQuery.data?.length ?? 0} available
                 </p>
@@ -1165,6 +1284,8 @@ export function CompanySkills() {
             checkUpdatesPending={updateStatusQuery.isFetching}
             onInstallUpdate={() => installUpdate.mutate()}
             installUpdatePending={installUpdate.isPending}
+            onDelete={openDeleteDialog}
+            deletePending={deleteSkill.isPending}
             onSave={() => saveFile.mutate()}
             savePending={saveFile.isPending}
           />

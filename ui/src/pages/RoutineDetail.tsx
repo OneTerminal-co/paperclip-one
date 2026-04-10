@@ -17,7 +17,6 @@ import {
 } from "lucide-react";
 import { routinesApi, type RoutineTriggerResponse, type RotateRoutineTriggerResponse } from "../api/routines";
 import { heartbeatsApi } from "../api/heartbeats";
-import { instanceSettingsApi } from "../api/instanceSettings";
 import { LiveRunWidget } from "../components/LiveRunWidget";
 import { agentsApi } from "../api/agents";
 import { projectsApi } from "../api/projects";
@@ -27,6 +26,7 @@ import { useToast } from "../context/ToastContext";
 import { queryKeys } from "../lib/queryKeys";
 import { buildRoutineTriggerPatch } from "../lib/routine-trigger-patch";
 import { timeAgo } from "../lib/timeAgo";
+import { ToggleSwitch } from "@/components/ui/toggle-switch";
 import { EmptyState } from "../components/EmptyState";
 import { PageSkeleton } from "../components/PageSkeleton";
 import { AgentIcon } from "../components/AgentIconPicker";
@@ -34,14 +34,12 @@ import { InlineEntitySelector, type InlineEntityOption } from "../components/Inl
 import { MarkdownEditor, type MarkdownEditorRef } from "../components/MarkdownEditor";
 import {
   RoutineRunVariablesDialog,
-  routineRunNeedsConfiguration,
   type RoutineRunDialogSubmitData,
 } from "../components/RoutineRunVariablesDialog";
 import { RoutineVariablesEditor, RoutineVariablesHint } from "../components/RoutineVariablesEditor";
 import { ScheduleEditor, describeSchedule } from "../components/ScheduleEditor";
 import { RunButton } from "../components/AgentActionButtons";
 import { getRecentAssigneeIds, sortAgentsByRecency, trackRecentAssignee } from "../lib/recent-assignees";
-import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Input } from "@/components/ui/input";
@@ -61,7 +59,7 @@ import type { RoutineTrigger, RoutineVariable } from "@paperclipai/shared";
 const concurrencyPolicies = ["coalesce_if_active", "always_enqueue", "skip_if_active"];
 const catchUpPolicies = ["skip_missed", "enqueue_missed_with_cap"];
 const triggerKinds = ["schedule", "webhook"];
-const signingModes = ["bearer", "hmac_sha256"];
+const signingModes = ["bearer", "hmac_sha256", "github_hmac", "none"];
 const routineTabs = ["triggers", "runs", "activity"] as const;
 const concurrencyPolicyDescriptions: Record<string, string> = {
   coalesce_if_active: "Keep one follow-up run queued while an active run is still working.",
@@ -75,7 +73,10 @@ const catchUpPolicyDescriptions: Record<string, string> = {
 const signingModeDescriptions: Record<string, string> = {
   bearer: "Expect a shared bearer token in the Authorization header.",
   hmac_sha256: "Expect an HMAC SHA-256 signature over the request using the shared secret.",
+  github_hmac: "Accept GitHub-style X-Hub-Signature-256 header (HMAC over raw body, no timestamp).",
+  none: "No authentication — the webhook URL itself acts as a shared secret.",
 };
+const SIGNING_MODES_WITHOUT_REPLAY_WINDOW = new Set(["github_hmac", "none"]);
 
 type RoutineTab = (typeof routineTabs)[number];
 
@@ -120,6 +121,24 @@ function getLocalTimezone(): string {
   }
 }
 
+function buildRoutineMutationPayload(input: {
+  title: string;
+  description: string;
+  projectId: string;
+  assigneeAgentId: string;
+  priority: string;
+  concurrencyPolicy: string;
+  catchUpPolicy: string;
+  variables: RoutineVariable[];
+}) {
+  return {
+    ...input,
+    description: input.description.trim() || null,
+    projectId: input.projectId || null,
+    assigneeAgentId: input.assigneeAgentId || null,
+  };
+}
+
 function TriggerEditor({
   trigger,
   onSave,
@@ -131,7 +150,6 @@ function TriggerEditor({
   onRotate: (id: string) => void;
   onDelete: (id: string) => void;
 }) {
-  const { t } = useTranslation();
   const [draft, setDraft] = useState({
     label: trigger.label ?? "",
     cronExpression: trigger.cronExpression ?? "",
@@ -174,7 +192,7 @@ function TriggerEditor({
         </div>
         {trigger.kind === "schedule" && (
           <div className="md:col-span-2 space-y-1.5">
-            <Label className="text-xs">{t("routines.trigger.schedule")}</Label>
+            <Label className="text-xs">Schedule</Label>
             <ScheduleEditor
               value={draft.cronExpression}
               onChange={(cronExpression) => setDraft((current) => ({ ...current, cronExpression }))}
@@ -184,7 +202,7 @@ function TriggerEditor({
         {trigger.kind === "webhook" && (
           <>
             <div className="space-y-1.5">
-              <Label className="text-xs">{t("routines.trigger.signingMode")}</Label>
+              <Label className="text-xs">Signing mode</Label>
               <Select
                 value={draft.signingMode}
                 onValueChange={(signingMode) => setDraft((current) => ({ ...current, signingMode }))}
@@ -199,13 +217,15 @@ function TriggerEditor({
                 </SelectContent>
               </Select>
             </div>
-            <div className="space-y-1.5">
-              <Label className="text-xs">{t("routines.trigger.replayWindow")}</Label>
-              <Input
-                value={draft.replayWindowSec}
-                onChange={(event) => setDraft((current) => ({ ...current, replayWindowSec: event.target.value }))}
-              />
-            </div>
+            {!SIGNING_MODES_WITHOUT_REPLAY_WINDOW.has(draft.signingMode) && (
+              <div className="space-y-1.5">
+                <Label className="text-xs">Replay window (seconds)</Label>
+                <Input
+                  value={draft.replayWindowSec}
+                  onChange={(event) => setDraft((current) => ({ ...current, replayWindowSec: event.target.value }))}
+                />
+              </div>
+            )}
           </>
         )}
       </div>
@@ -216,7 +236,7 @@ function TriggerEditor({
           {trigger.kind === "webhook" && (
             <Button variant="outline" size="sm" onClick={() => onRotate(trigger.id)}>
               <RefreshCw className="mr-1.5 h-3.5 w-3.5" />
-              {t("routines.trigger.rotateSecret")}
+              Rotate secret
             </Button>
           )}
           <Button
@@ -225,7 +245,7 @@ function TriggerEditor({
             onClick={() => onSave(trigger.id, buildRoutineTriggerPatch(trigger, draft, getLocalTimezone()))}
           >
             <Save className="mr-1.5 h-3.5 w-3.5" />
-            {t("routines.trigger.saveTrigger")}
+            Save trigger
           </Button>
           <Button
             variant="ghost"
@@ -249,7 +269,6 @@ export function RoutineDetail() {
   const navigate = useNavigate();
   const location = useLocation();
   const { pushToast } = useToast();
-  const { t } = useTranslation();
   const hydratedRoutineIdRef = useRef<string | null>(null);
   const titleInputRef = useRef<HTMLTextAreaElement | null>(null);
   const descriptionEditorRef = useRef<MarkdownEditorRef>(null);
@@ -330,11 +349,6 @@ export function RoutineDetail() {
     queryFn: () => projectsApi.list(selectedCompanyId!),
     enabled: !!selectedCompanyId,
   });
-  const { data: experimentalSettings } = useQuery({
-    queryKey: queryKeys.instance.experimentalSettings,
-    queryFn: () => instanceSettingsApi.getExperimental(),
-    retry: false,
-  });
 
   const routineDefaults = useMemo(
     () =>
@@ -342,8 +356,8 @@ export function RoutineDetail() {
         ? {
             title: routine.title,
             description: routine.description ?? "",
-            projectId: routine.projectId,
-            assigneeAgentId: routine.assigneeAgentId,
+            projectId: routine.projectId ?? "",
+            assigneeAgentId: routine.assigneeAgentId ?? "",
             priority: routine.priority,
             concurrencyPolicy: routine.concurrencyPolicy,
             catchUpPolicy: routine.catchUpPolicy,
@@ -415,10 +429,7 @@ export function RoutineDetail() {
 
   const saveRoutine = useMutation({
     mutationFn: () => {
-      return routinesApi.update(routineId!, {
-        ...editDraft,
-        description: editDraft.description.trim() || null,
-      });
+      return routinesApi.update(routineId!, buildRoutineMutationPayload(editDraft));
     },
     onSuccess: async () => {
       await Promise.all([
@@ -429,8 +440,8 @@ export function RoutineDetail() {
     },
     onError: (error) => {
       pushToast({
-        title: t("routines.toast.saveFailed"),
-        body: error instanceof Error ? error.message : t("routines.toast.saveFailedBody"),
+        title: "Failed to save routine",
+        body: error instanceof Error ? error.message : "Paperclip could not save the routine.",
         tone: "error",
       });
     },
@@ -440,6 +451,8 @@ export function RoutineDetail() {
     mutationFn: (data?: RoutineRunDialogSubmitData) =>
       routinesApi.run(routineId!, {
         ...(data?.variables && Object.keys(data.variables).length > 0 ? { variables: data.variables } : {}),
+        ...(data?.assigneeAgentId !== undefined ? { assigneeAgentId: data.assigneeAgentId } : {}),
+        ...(data?.projectId !== undefined ? { projectId: data.projectId } : {}),
         ...(data?.executionWorkspaceId !== undefined ? { executionWorkspaceId: data.executionWorkspaceId } : {}),
         ...(data?.executionWorkspacePreference !== undefined
           ? { executionWorkspacePreference: data.executionWorkspacePreference }
@@ -449,7 +462,7 @@ export function RoutineDetail() {
           : {}),
       }),
     onSuccess: async () => {
-      pushToast({ title: t("routines.toast.runStarted"), tone: "success" });
+      pushToast({ title: "Routine run started", tone: "success" });
       setRunVariablesOpen(false);
       setActiveTab("runs");
       await Promise.all([
@@ -461,8 +474,8 @@ export function RoutineDetail() {
     },
     onError: (error) => {
       pushToast({
-        title: t("routines.toast.runFailed"),
-        body: error instanceof Error ? error.message : t("routines.toast.runFailedBody"),
+        title: "Routine run failed",
+        body: error instanceof Error ? error.message : "Paperclip could not start the routine run.",
         tone: "error",
       });
     },
@@ -472,8 +485,8 @@ export function RoutineDetail() {
     mutationFn: (status: string) => routinesApi.update(routineId!, { status }),
     onSuccess: async (_data, status) => {
       pushToast({
-        title: t("routines.toast.saved"),
-        body: status === "paused" ? t("routines.toast.automationPaused") : t("routines.toast.automationEnabled"),
+        title: "Routine saved",
+        body: status === "paused" ? "Automation paused." : "Automation enabled.",
         tone: "success",
       });
       await Promise.all([
@@ -483,8 +496,8 @@ export function RoutineDetail() {
     },
     onError: (error) => {
       pushToast({
-        title: t("routines.toast.updateFailed"),
-        body: error instanceof Error ? error.message : t("routines.toast.updateFailedBody"),
+        title: "Failed to update routine",
+        body: error instanceof Error ? error.message : "Paperclip could not update the routine.",
         tone: "error",
       });
     },
@@ -511,14 +524,14 @@ export function RoutineDetail() {
     onSuccess: async (result) => {
       if (result.secretMaterial) {
         setSecretMessage({
-          title: t("routines.toast.webhookCreated"),
+          title: "Webhook trigger created",
           webhookUrl: result.secretMaterial.webhookUrl,
           webhookSecret: result.secretMaterial.webhookSecret,
         });
       } else {
         pushToast({
-          title: t("routines.toast.triggerAdded"),
-          body: t("routines.toast.triggerAddedBody"),
+          title: "Trigger added",
+          body: "The routine schedule was saved.",
           tone: "success",
         });
       }
@@ -530,8 +543,8 @@ export function RoutineDetail() {
     },
     onError: (error) => {
       pushToast({
-        title: t("routines.toast.triggerAddFailed"),
-        body: error instanceof Error ? error.message : t("routines.toast.triggerAddFailedBody"),
+        title: "Failed to add trigger",
+        body: error instanceof Error ? error.message : "Paperclip could not create the trigger.",
         tone: "error",
       });
     },
@@ -541,8 +554,8 @@ export function RoutineDetail() {
     mutationFn: ({ id, patch }: { id: string; patch: Record<string, unknown> }) => routinesApi.updateTrigger(id, patch),
     onSuccess: async () => {
       pushToast({
-        title: t("routines.toast.triggerSaved"),
-        body: t("routines.toast.triggerSavedBody"),
+        title: "Trigger saved",
+        body: "The routine cadence update was saved.",
         tone: "success",
       });
       await Promise.all([
@@ -553,8 +566,8 @@ export function RoutineDetail() {
     },
     onError: (error) => {
       pushToast({
-        title: t("routines.toast.triggerUpdateFailed"),
-        body: error instanceof Error ? error.message : t("routines.toast.triggerUpdateFailedBody"),
+        title: "Failed to update trigger",
+        body: error instanceof Error ? error.message : "Paperclip could not update the trigger.",
         tone: "error",
       });
     },
@@ -564,7 +577,7 @@ export function RoutineDetail() {
     mutationFn: (id: string) => routinesApi.deleteTrigger(id),
     onSuccess: async () => {
       pushToast({
-        title: t("routines.toast.triggerDeleted"),
+        title: "Trigger deleted",
         tone: "success",
       });
       await Promise.all([
@@ -575,8 +588,8 @@ export function RoutineDetail() {
     },
     onError: (error) => {
       pushToast({
-        title: t("routines.toast.triggerDeleteFailed"),
-        body: error instanceof Error ? error.message : t("routines.toast.triggerDeleteFailedBody"),
+        title: "Failed to delete trigger",
+        body: error instanceof Error ? error.message : "Paperclip could not delete the trigger.",
         tone: "error",
       });
     },
@@ -586,7 +599,7 @@ export function RoutineDetail() {
     mutationFn: (id: string): Promise<RotateRoutineTriggerResponse> => routinesApi.rotateTriggerSecret(id),
     onSuccess: async (result) => {
       setSecretMessage({
-        title: t("routines.toast.secretRotated"),
+        title: "Webhook secret rotated",
         webhookUrl: result.secretMaterial.webhookUrl,
         webhookSecret: result.secretMaterial.webhookSecret,
       });
@@ -597,8 +610,8 @@ export function RoutineDetail() {
     },
     onError: (error) => {
       pushToast({
-        title: t("routines.toast.secretRotateFailed"),
-        body: error instanceof Error ? error.message : t("routines.toast.secretRotateFailedBody"),
+        title: "Failed to rotate webhook secret",
+        body: error instanceof Error ? error.message : "Paperclip could not rotate the webhook secret.",
         tone: "error",
       });
     },
@@ -648,20 +661,21 @@ export function RoutineDetail() {
   if (error || !routine) {
     return (
       <p className="pt-6 text-sm text-destructive">
-        {error instanceof Error ? error.message : t("routines.notFound")}
+        {error instanceof Error ? error.message : "Routine not found"}
       </p>
     );
   }
 
   const automationEnabled = routine.status === "active";
-  const selectedProject = projects?.find((project) => project.id === routine.projectId) ?? null;
-  const needsRunConfiguration = routineRunNeedsConfiguration({
-    variables: routine.variables ?? [],
-    project: selectedProject,
-    isolatedWorkspacesEnabled: experimentalSettings?.enableIsolatedWorkspaces === true,
-  });
+  const selectedProject = routine.projectId ? (projects?.find((project) => project.id === routine.projectId) ?? null) : null;
   const automationToggleDisabled = updateRoutineStatus.isPending || routine.status === "archived";
-  const automationLabel = routine.status === "archived" ? "Archived" : automationEnabled ? "Active" : "Paused";
+  const automationLabel = routine.status === "archived"
+    ? "Archived"
+    : !routine.assigneeAgentId
+      ? "Draft"
+      : automationEnabled
+        ? "Active"
+        : "Paused";
   const automationLabelClassName = routine.status === "archived"
     ? "text-muted-foreground"
     : automationEnabled
@@ -675,7 +689,7 @@ export function RoutineDetail() {
         <textarea
           ref={titleInputRef}
           className="flex-1 min-w-0 resize-none overflow-hidden bg-transparent text-xl font-bold outline-none placeholder:text-muted-foreground/50"
-          placeholder={t("routines.routineTitle")}
+          placeholder="Routine title"
           rows={1}
           value={editDraft.title}
           onChange={(event) => {
@@ -705,32 +719,27 @@ export function RoutineDetail() {
         <div className="flex shrink-0 items-center gap-3 pt-1">
           <RunButton
             onClick={() => {
-              if (needsRunConfiguration) {
-                setRunVariablesOpen(true);
-                return;
-              }
-              runRoutine.mutate({});
+              setRunVariablesOpen(true);
             }}
             disabled={runRoutine.isPending}
           />
-          <button
-            type="button"
-            role="switch"
-            data-slot="toggle"
-            aria-checked={automationEnabled}
-            aria-label={automationEnabled ? "Pause automatic triggers" : "Enable automatic triggers"}
+          <ToggleSwitch
+            size="lg"
+            checked={automationEnabled}
+            onCheckedChange={() => {
+              if (!automationEnabled && !routine.assigneeAgentId) {
+                pushToast({
+                  title: "Default agent required",
+                  body: "Set a default agent before enabling routine automation.",
+                  tone: "warn",
+                });
+                return;
+              }
+              updateRoutineStatus.mutate(automationEnabled ? "paused" : "active");
+            }}
             disabled={automationToggleDisabled}
-            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-              automationEnabled ? "bg-emerald-500" : "bg-muted"
-            } ${automationToggleDisabled ? "cursor-not-allowed opacity-50" : ""}`}
-            onClick={() => updateRoutineStatus.mutate(automationEnabled ? "paused" : "active")}
-          >
-            <span
-              className={`inline-block h-5 w-5 rounded-full bg-background shadow-sm transition-transform ${
-                automationEnabled ? "translate-x-5" : "translate-x-0.5"
-              }`}
-            />
-          </button>
+            aria-label={automationEnabled ? "Pause automatic triggers" : "Enable automatic triggers"}
+          />
           <span className={`min-w-[3.75rem] text-sm font-medium ${automationLabelClassName}`}>
             {automationLabel}
           </span>
@@ -742,26 +751,32 @@ export function RoutineDetail() {
         <div className="rounded-lg border border-blue-500/30 bg-blue-500/5 p-4 space-y-3 text-sm">
           <div>
             <p className="font-medium">{secretMessage.title}</p>
-            <p className="text-xs text-muted-foreground">{t("routines.secretBanner.saveNow")}</p>
+            <p className="text-xs text-muted-foreground">Save this now. Paperclip will not show the secret value again.</p>
           </div>
           <div className="space-y-2">
             <div className="flex items-center gap-2">
               <Input value={secretMessage.webhookUrl} readOnly className="flex-1" />
               <Button variant="outline" size="sm" onClick={() => copySecretValue("Webhook URL", secretMessage.webhookUrl)}>
                 <Copy className="h-3.5 w-3.5 mr-1" />
-                {t("routines.secretBanner.copyUrl")}
+                URL
               </Button>
             </div>
             <div className="flex items-center gap-2">
               <Input value={secretMessage.webhookSecret} readOnly className="flex-1" />
               <Button variant="outline" size="sm" onClick={() => copySecretValue("Webhook secret", secretMessage.webhookSecret)}>
                 <Copy className="h-3.5 w-3.5 mr-1" />
-                {t("routines.secretBanner.copySecret")}
+                Secret
               </Button>
             </div>
           </div>
         </div>
       )}
+
+      {!routine.assigneeAgentId ? (
+        <div className="rounded-lg border border-amber-500/30 bg-amber-500/5 p-4 text-sm text-amber-900 dark:text-amber-200">
+          Default agent required. This routine can stay as a draft and still run manually, but automation stays paused until you assign a default agent.
+        </div>
+      ) : null}
 
       {/* Assignment row */}
       <div className="overflow-x-auto overscroll-x-contain">
@@ -861,13 +876,14 @@ export function RoutineDetail() {
         bordered={false}
         contentClassName="min-h-[120px] text-[15px] leading-7"
         onSubmit={() => {
-          if (!saveRoutine.isPending && editDraft.title.trim() && editDraft.projectId && editDraft.assigneeAgentId) {
+          if (!saveRoutine.isPending && editDraft.title.trim()) {
             saveRoutine.mutate();
           }
         }}
       />
       <RoutineVariablesHint />
       <RoutineVariablesEditor
+        title={editDraft.title}
         description={editDraft.description}
         value={editDraft.variables}
         onChange={(variables) => setEditDraft((current) => ({ ...current, variables }))}
@@ -876,13 +892,13 @@ export function RoutineDetail() {
       {/* Advanced delivery settings */}
       <Collapsible open={advancedOpen} onOpenChange={setAdvancedOpen}>
         <CollapsibleTrigger className="flex w-full items-center justify-between text-left">
-          <span className="text-sm font-medium">{t("routines.advancedSettings")}</span>
+          <span className="text-sm font-medium">Advanced delivery settings</span>
           {advancedOpen ? <ChevronDown className="h-4 w-4 text-muted-foreground" /> : <ChevronRight className="h-4 w-4 text-muted-foreground" />}
         </CollapsibleTrigger>
         <CollapsibleContent className="pt-3">
           <div className="grid gap-4 md:grid-cols-2">
             <div className="space-y-2">
-              <p className="text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground">{t("routines.concurrency")}</p>
+              <p className="text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground">Concurrency</p>
               <Select
                 value={editDraft.concurrencyPolicy}
                 onValueChange={(concurrencyPolicy) => setEditDraft((current) => ({ ...current, concurrencyPolicy }))}
@@ -899,7 +915,7 @@ export function RoutineDetail() {
               <p className="text-xs text-muted-foreground">{concurrencyPolicyDescriptions[editDraft.concurrencyPolicy]}</p>
             </div>
             <div className="space-y-2">
-              <p className="text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground">{t("routines.catchUp")}</p>
+              <p className="text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground">Catch-up</p>
               <Select
                 value={editDraft.catchUpPolicy}
                 onValueChange={(catchUpPolicy) => setEditDraft((current) => ({ ...current, catchUpPolicy }))}
@@ -922,16 +938,16 @@ export function RoutineDetail() {
       {/* Save bar */}
       <div className="flex items-center justify-between">
         {isEditDirty ? (
-          <span className="text-xs text-amber-600">{t("routines.unsavedChanges")}</span>
+          <span className="text-xs text-amber-600">Unsaved changes</span>
         ) : (
           <span />
         )}
         <Button
           onClick={() => saveRoutine.mutate()}
-          disabled={saveRoutine.isPending || !editDraft.title.trim() || !editDraft.projectId || !editDraft.assigneeAgentId}
+          disabled={saveRoutine.isPending || !editDraft.title.trim()}
         >
           <Save className="mr-2 h-4 w-4" />
-          {t("routines.saveRoutine")}
+          Save routine
         </Button>
       </div>
 
@@ -942,26 +958,26 @@ export function RoutineDetail() {
         <TabsList variant="line" className="w-full justify-start gap-1">
           <TabsTrigger value="triggers" className="gap-1.5">
             <Clock3 className="h-3.5 w-3.5" />
-            {t("routines.triggers")}
+            Triggers
           </TabsTrigger>
           <TabsTrigger value="runs" className="gap-1.5">
             <Play className="h-3.5 w-3.5" />
-            {t("routines.runs")}
+            Runs
             {hasLiveRun && <span className="h-2 w-2 rounded-full bg-blue-500 animate-pulse" />}
           </TabsTrigger>
 <TabsTrigger value="activity" className="gap-1.5">
             <ActivityIcon className="h-3.5 w-3.5" />
-            {t("routines.activity")}
+            Activity
           </TabsTrigger>
         </TabsList>
 
         <TabsContent value="triggers" className="space-y-4">
           {/* Add trigger form */}
           <div className="rounded-lg border border-border p-4 space-y-3">
-            <p className="text-sm font-medium">{t("routines.trigger.addTrigger")}</p>
+            <p className="text-sm font-medium">Add trigger</p>
             <div className="grid gap-3 md:grid-cols-2">
               <div className="space-y-1.5">
-                <Label className="text-xs">{t("routines.trigger.kind")}</Label>
+                <Label className="text-xs">Kind</Label>
                 <Select value={newTrigger.kind} onValueChange={(kind) => setNewTrigger((current) => ({ ...current, kind }))}>
                   <SelectTrigger>
                     <SelectValue />
@@ -987,7 +1003,7 @@ export function RoutineDetail() {
               {newTrigger.kind === "webhook" && (
                 <>
                   <div className="space-y-1.5">
-                    <Label className="text-xs">{t("routines.trigger.signingMode")}</Label>
+                    <Label className="text-xs">Signing mode</Label>
                     <Select value={newTrigger.signingMode} onValueChange={(signingMode) => setNewTrigger((current) => ({ ...current, signingMode }))}>
                       <SelectTrigger>
                         <SelectValue />
@@ -1000,23 +1016,25 @@ export function RoutineDetail() {
                     </Select>
                     <p className="text-xs text-muted-foreground">{signingModeDescriptions[newTrigger.signingMode]}</p>
                   </div>
-                  <div className="space-y-1.5">
-                    <Label className="text-xs">{t("routines.trigger.replayWindow")}</Label>
-                    <Input value={newTrigger.replayWindowSec} onChange={(event) => setNewTrigger((current) => ({ ...current, replayWindowSec: event.target.value }))} />
-                  </div>
+                  {!SIGNING_MODES_WITHOUT_REPLAY_WINDOW.has(newTrigger.signingMode) && (
+                    <div className="space-y-1.5">
+                      <Label className="text-xs">Replay window (seconds)</Label>
+                      <Input value={newTrigger.replayWindowSec} onChange={(event) => setNewTrigger((current) => ({ ...current, replayWindowSec: event.target.value }))} />
+                    </div>
+                  )}
                 </>
               )}
             </div>
             <div className="flex items-center justify-end">
               <Button size="sm" onClick={() => createTrigger.mutate()} disabled={createTrigger.isPending}>
-                {createTrigger.isPending ? t("routines.trigger.adding") : t("routines.trigger.addTrigger")}
+                {createTrigger.isPending ? "Adding..." : "Add trigger"}
               </Button>
             </div>
           </div>
 
           {/* Existing triggers */}
           {routine.triggers.length === 0 ? (
-            <p className="text-xs text-muted-foreground">{t("routines.trigger.noTriggersYet")}</p>
+            <p className="text-xs text-muted-foreground">No triggers configured yet.</p>
           ) : (
             <div className="space-y-3">
               {routine.triggers.map((trigger) => (
@@ -1037,7 +1055,7 @@ export function RoutineDetail() {
             <LiveRunWidget issueId={activeIssueId} companyId={routine.companyId} />
           )}
           {(routineRuns ?? []).length === 0 ? (
-            <p className="text-xs text-muted-foreground">{t("routines.noRunsYet")}</p>
+            <p className="text-xs text-muted-foreground">No runs yet.</p>
           ) : (
             <div className="border border-border rounded-lg divide-y divide-border">
               {(routineRuns ?? []).map((run) => (
@@ -1065,7 +1083,7 @@ export function RoutineDetail() {
 
         <TabsContent value="activity">
           {(activity ?? []).length === 0 ? (
-            <p className="text-xs text-muted-foreground">{t("routines.noActivityYet")}</p>
+            <p className="text-xs text-muted-foreground">No activity yet.</p>
           ) : (
             <div className="border border-border rounded-lg divide-y divide-border">
               {(activity ?? []).map((event) => (
@@ -1096,7 +1114,10 @@ export function RoutineDetail() {
         open={runVariablesOpen}
         onOpenChange={setRunVariablesOpen}
         companyId={routine.companyId}
-        project={selectedProject}
+        agents={agents ?? []}
+        projects={projects ?? []}
+        defaultProjectId={routine.projectId}
+        defaultAssigneeAgentId={routine.assigneeAgentId}
         variables={routine.variables ?? []}
         isPending={runRoutine.isPending}
         onSubmit={(data) => runRoutine.mutate(data)}
