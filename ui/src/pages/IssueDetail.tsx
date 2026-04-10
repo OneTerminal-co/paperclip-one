@@ -400,6 +400,7 @@ export function IssueDetail() {
     queryKey: queryKeys.issues.detail(issueId!),
     queryFn: () => issuesApi.get(issueId!),
     enabled: !!issueId,
+    refetchInterval: 5000,
   });
   const resolvedCompanyId = issue?.companyId ?? selectedCompanyId;
   const commentComposerDisabledReason = useMemo(() => {
@@ -428,6 +429,7 @@ export function IssueDetail() {
     getNextPageParam: (lastPage) =>
       getNextIssueCommentPageParam(lastPage, ISSUE_COMMENT_PAGE_SIZE),
     placeholderData: keepPreviousData,
+    refetchInterval: 3000,
   });
   const comments = useMemo(
     () => flattenIssueCommentPages(commentPages?.pages),
@@ -439,6 +441,7 @@ export function IssueDetail() {
     queryFn: () => activityApi.forIssue(issueId!),
     enabled: !!issueId,
     placeholderData: keepPreviousData,
+    refetchInterval: 5000,
   });
 
   const { data: linkedRuns, isLoading: linkedRunsLoading } = useQuery({

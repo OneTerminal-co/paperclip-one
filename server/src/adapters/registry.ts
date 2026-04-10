@@ -91,6 +91,17 @@ import {
   agentConfigurationDoc as ollamaAgentConfigurationDoc,
   models as ollamaModels,
 } from "@paperclipai/adapter-ollama-local";
+import {
+  execute as bedrockExecute,
+  listBedrockSkills,
+  syncBedrockSkills,
+  testEnvironment as bedrockTestEnvironment,
+  sessionCodec as bedrockSessionCodec,
+} from "@paperclipai/adapter-bedrock-gateway/server";
+import {
+  agentConfigurationDoc as bedrockAgentConfigurationDoc,
+  models as bedrockModels,
+} from "@paperclipai/adapter-bedrock-gateway";
 import { BUILTIN_ADAPTER_TYPES } from "./builtin-adapter-types.js";
 import { buildExternalAdapters } from "./plugin-loader.js";
 import { getDisabledAdapterTypes } from "../services/adapter-plugin-store.js";
@@ -216,6 +227,18 @@ const ollamaLocalAdapter: ServerAdapterModule = {
   agentConfigurationDoc: ollamaAgentConfigurationDoc,
 };
 
+const bedrockGatewayAdapter: ServerAdapterModule = {
+  type: "bedrock_gateway",
+  execute: bedrockExecute,
+  testEnvironment: bedrockTestEnvironment,
+  sessionCodec: bedrockSessionCodec,
+  listSkills: listBedrockSkills,
+  syncSkills: syncBedrockSkills,
+  models: bedrockModels,
+  supportsLocalAgentJwt: true,
+  agentConfigurationDoc: bedrockAgentConfigurationDoc,
+};
+
 const adaptersByType = new Map<string, ServerAdapterModule>();
 
 // For builtin types that are overridden by an external adapter, we keep the
@@ -238,6 +261,7 @@ function registerBuiltInAdapters() {
     openclawGatewayAdapter,
     hermesLocalAdapter,
     ollamaLocalAdapter,
+    bedrockGatewayAdapter,
     processAdapter,
     httpAdapter,
   ]) {

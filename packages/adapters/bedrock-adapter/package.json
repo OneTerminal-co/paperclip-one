@@ -1,0 +1,30 @@
+{
+  "name": "@paperclip/bedrock-adapter",
+  "version": "1.0.0",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist",
+    "src"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest",
+    "test:bedrock": "node ./scripts/test-bedrock-safe.mjs",
+    "test:bedrock:adapter": "node ./scripts/test-bedrock.mjs",
+    "test:claude-sonnet": "node ./scripts/test-claude-sonnet.mjs",
+    "update:credentials": "bash ./scripts/update-credentials.sh"
+  },
+  "dependencies": {
+    "@aws-sdk/client-bedrock-runtime": "^3.600.0",
+    "@aws-sdk/credential-providers": "^3.600.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.2",
+    "typescript": "^5.3.3",
+    "vitest": "^1.0.0"
+  }
+}

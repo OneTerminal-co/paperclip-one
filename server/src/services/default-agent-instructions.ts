@@ -3,6 +3,13 @@ import fs from "node:fs/promises";
 const DEFAULT_AGENT_BUNDLE_FILES = {
   default: ["AGENTS.md"],
   ceo: ["AGENTS.md", "HEARTBEAT.md", "SOUL.md", "TOOLS.md"],
+  // OpsFleet agents
+  finops: ["AGENTS.md", "HEARTBEAT.md", "SOUL.md", "TOOLS.md"],
+  security: ["AGENTS.md", "HEARTBEAT.md", "SOUL.md", "TOOLS.md"],
+  "infra-ops": ["AGENTS.md", "HEARTBEAT.md", "SOUL.md", "TOOLS.md"],
+  knowledge: ["AGENTS.md", "HEARTBEAT.md", "SOUL.md", "TOOLS.md"],
+  cicd: ["AGENTS.md", "HEARTBEAT.md", "SOUL.md", "TOOLS.md"],
+  compliance: ["AGENTS.md", "HEARTBEAT.md", "SOUL.md", "TOOLS.md"],
 } as const;
 
 type DefaultAgentBundleRole = keyof typeof DEFAULT_AGENT_BUNDLE_FILES;
@@ -22,6 +29,12 @@ export async function loadDefaultAgentInstructionsBundle(role: DefaultAgentBundl
   return Object.fromEntries(entries);
 }
 
+const OPSFLEET_ROLES = ["finops", "security", "infra-ops", "knowledge", "cicd", "compliance"] as const;
+
 export function resolveDefaultAgentInstructionsBundleRole(role: string): DefaultAgentBundleRole {
-  return role === "ceo" ? "ceo" : "default";
+  if (role === "ceo") return "ceo";
+  if (OPSFLEET_ROLES.includes(role as (typeof OPSFLEET_ROLES)[number])) {
+    return role as DefaultAgentBundleRole;
+  }
+  return "default";
 }

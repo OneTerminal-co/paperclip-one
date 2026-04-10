@@ -1,0 +1,543 @@
+
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: var(--font-sans); color: var(--color-text-primary); }
+.w { padding: 1rem 0; max-width: 880px; }
+.tabs { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 1.5rem; }
+.tab { padding: 7px 15px; border-radius: 999px; border: 0.5px solid var(--color-border-secondary); font-size: 13px; cursor: pointer; background: transparent; color: var(--color-text-secondary); font-family: var(--font-sans); transition: all .15s; }
+.tab.on { background: #0F6E56; color: #fff; border-color: transparent; font-weight: 500; }
+.tab:hover:not(.on) { background: var(--color-background-secondary); }
+.sec { display: none; }
+.sec.v { display: block; }
+.card { background: var(--color-background-primary); border: 0.5px solid var(--color-border-tertiary); border-radius: var(--border-radius-lg); padding: 1rem 1.25rem; margin-bottom: 12px; }
+.g2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(270px, 1fr)); gap: 12px; margin-bottom: 12px; }
+.g3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin-bottom: 12px; }
+.h3 { font-size: 11px; font-weight: 500; color: var(--color-text-secondary); margin-bottom: 8px; text-transform: uppercase; letter-spacing: .05em; }
+.h2 { font-size: 14px; font-weight: 500; margin-bottom: 5px; }
+.p { font-size: 13px; line-height: 1.6; color: var(--color-text-secondary); }
+.div { height: 0.5px; background: var(--color-border-tertiary); margin: 10px 0; }
+.pill { display: inline-block; padding: 2px 9px; border-radius: 999px; font-size: 11px; font-weight: 500; margin-bottom: 6px; }
+.pg { background: #E1F5EE; color: #085041; }
+.pr { background: #FCEBEB; color: #791F1F; }
+.pb { background: #E6F1FB; color: #0C447C; }
+.pa { background: #FAEEDA; color: #633806; }
+.pp { background: #EEEDFE; color: #3C3489; }
+.pgr { background: #F1EFE8; color: #444441; }
+.mono { font-family: var(--font-mono); font-size: 11px; background: var(--color-background-secondary); padding: 2px 6px; border-radius: 4px; color: var(--color-text-secondary); display: inline-block; }
+.code { font-family: var(--font-mono); font-size: 11px; background: var(--color-background-secondary); padding: .75rem 1rem; border-radius: var(--border-radius-md); color: var(--color-text-secondary); line-height: 1.7; margin: 8px 0; white-space: pre-wrap; }
+.brecha { border-radius: var(--border-radius-lg); padding: 1rem 1.25rem; margin-bottom: 16px; }
+.brecha-header { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+.brecha-num { width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; flex-shrink: 0; }
+.brecha-title { font-size: 15px; font-weight: 500; }
+.sol-card { background: var(--color-background-primary); border-radius: var(--border-radius-md); padding: .8rem 1rem; margin-bottom: 8px; border: 0.5px solid var(--color-border-tertiary); }
+.sol-card .st { font-size: 13px; font-weight: 500; margin-bottom: 4px; }
+.sol-card .sd { font-size: 12px; color: var(--color-text-secondary); line-height: 1.5; }
+.sol-card .sc { font-size: 11px; margin-top: 6px; display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+.effort { font-size: 11px; padding: 2px 8px; border-radius: 4px; font-weight: 500; }
+.e1 { background: #E1F5EE; color: #085041; }
+.e2 { background: #FAEEDA; color: #633806; }
+.e3 { background: #FCEBEB; color: #791F1F; }
+.step { display: flex; gap: 12px; align-items: flex-start; padding: 9px 0; border-bottom: 0.5px solid var(--color-border-tertiary); }
+.step:last-child { border-bottom: none; }
+.snum { width: 22px; height: 22px; border-radius: 50%; background: #0F6E56; color: #fff; font-size: 11px; font-weight: 600; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 2px; }
+.timeline { display: flex; gap: 0; margin-bottom: 16px; }
+.tl-item { flex: 1; padding: .75rem; border: 0.5px solid var(--color-border-tertiary); border-right: none; }
+.tl-item:first-child { border-radius: var(--border-radius-md) 0 0 var(--border-radius-md); }
+.tl-item:last-child { border-right: 0.5px solid var(--color-border-tertiary); border-radius: 0 var(--border-radius-md) var(--border-radius-md) 0; }
+.tl-label { font-size: 11px; color: var(--color-text-tertiary); margin-bottom: 4px; text-transform: uppercase; letter-spacing: .04em; }
+.tl-title { font-size: 13px; font-weight: 500; margin-bottom: 4px; }
+.tl-items { font-size: 12px; color: var(--color-text-secondary); line-height: 1.6; }
+.arch-row { display: flex; align-items: stretch; gap: 8px; margin-bottom: 8px; }
+.arch-box { flex: 1; background: var(--color-background-secondary); border-radius: var(--border-radius-md); padding: .6rem .8rem; }
+.arch-box .at { font-size: 12px; font-weight: 500; margin-bottom: 3px; }
+.arch-box .ad { font-size: 11px; color: var(--color-text-secondary); line-height: 1.4; }
+.arrow-mid { display: flex; align-items: center; color: var(--color-text-tertiary); font-size: 16px; padding: 0 2px; }
+</style>
+
+<div class="w">
+<div class="tabs">
+  <button class="tab on" onclick="show('b1',this)">Brecha 1 — Tiempo real</button>
+  <button class="tab" onclick="show('b2',this)">Brecha 2 — RCA / ML</button>
+  <button class="tab" onclick="show('b3',this)">Brecha 3 — Memoria</button>
+  <button class="tab" onclick="show('b4',this)">Brecha 4 — Integraciones</button>
+  <button class="tab" onclick="show('b5',this)">Brecha 5 — Continuidad</button>
+  <button class="tab" onclick="show('roadmap',this)">Roadmap de cierre</button>
+</div>
+
+<!-- BRECHA 1: TIEMPO REAL -->
+<div class="sec v" id="s-b1">
+  <div class="brecha" style="background:#FCEBEB; border: 0.5px solid #F7C1C1;">
+    <div class="brecha-header">
+      <div class="brecha-num" style="background:#E24B4A; color:#fff;">1</div>
+      <div>
+        <div class="brecha-title" style="color:#501313;">Respuesta reactiva en tiempo real a alertas</div>
+        <div style="font-size:12px;color:#A32D2D;">OpsFleet actua en el proximo heartbeat (hasta 4h). Los nativos actuan en segundos.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card" style="margin-bottom:12px;">
+    <div class="h3">Solucion 1 — Webhook receiver: el cambio mas impactante con menos codigo</div>
+    <p class="p" style="margin-bottom:10px;">Paperclip tiene un <span class="mono">HTTP adapter</span> que puede recibir webhooks y disparar un heartbeat inmediato. La solucion es crear un microservicio receptor que escuche alertas de CloudWatch/Azure Monitor y llame a la API de Paperclip para despertar al agente correcto al instante.</p>
+    <div class="arch-row">
+      <div class="arch-box"><div class="at">CloudWatch Alarm</div><div class="ad">SNS Topic → HTTP POST</div></div>
+      <div class="arrow-mid">→</div>
+      <div class="arch-box"><div class="at">OpsFleet Alert Router</div><div class="ad">Microservicio Python/Node<br>Clasifica la alerta<br>Decide que agente despertar</div></div>
+      <div class="arrow-mid">→</div>
+      <div class="arch-box"><div class="at">Paperclip API</div><div class="ad">POST /api/agents/{id}/heartbeat<br>Crea issue urgente<br>Asigna al agente correcto</div></div>
+      <div class="arrow-mid">→</div>
+      <div class="arch-box"><div class="at">Agente despierta</div><div class="ad">Claude Code corre inmediatamente<br>Investiga con MCP tools<br>Crea reporte en minutos</div></div>
+    </div>
+    <div class="code">
+# alert_router.py — microservicio simple (~80 lineas)
+from fastapi import FastAPI
+import httpx, os
+
+app = FastAPI()
+PAPERCLIP_URL = os.getenv("PAPERCLIP_URL")
+PAPERCLIP_TOKEN = os.getenv("PAPERCLIP_TOKEN")
+
+ALERT_ROUTING = {
+    "CPUUtilization":    "infra-ops-agent-id",
+    "CostAnomaly":       "finops-agent-id",
+    "SecurityFinding":   "security-agent-id",
+    "PipelineFailed":    "cicd-agent-id",
+}
+
+@app.post("/webhook/cloudwatch")
+async def cloudwatch_alert(payload: dict):
+    alarm_name = payload.get("AlarmName", "")
+    agent_id = route_alert(alarm_name)
+    
+    # Crear issue urgente en Paperclip
+    async with httpx.AsyncClient() as client:
+        await client.post(
+            f"{PAPERCLIP_URL}/api/companies/{COMPANY_ID}/issues",
+            json={
+                "title": f"ALERTA: {alarm_name}",
+                "priority": "urgent",
+                "assigneeAgentId": agent_id,
+                "description": str(payload)
+            },
+            headers={"Authorization": f"Bearer {PAPERCLIP_TOKEN}"}
+        )
+    return {"status": "dispatched"}
+    </div>
+    <div class="sol-card">
+      <div class="st">Resultado con esta solucion</div>
+      <div class="sd">Tiempo de respuesta: de 4 horas → 3-8 minutos (el tiempo que tarda Claude Code en iniciar y analizar). No es segundos como los nativos, pero es razonable para el 90% de incidentes en PYMEs.</div>
+      <div class="sc"><span class="effort e1">Esfuerzo bajo</span> <span class="mono">~2 dias de desarrollo</span> <span class="mono">Python FastAPI + 80 lineas</span></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="h3">Solucion 2 — Paperclip Process Adapter con polling frecuente (sin codigo extra)</div>
+    <p class="p" style="margin-bottom:8px;">Sin escribir codigo adicional: usar el adapter <span class="mono">process</span> de Paperclip para correr un script que hace polling de CloudWatch cada 2 minutos y crea un issue si detecta una alarma activa. Es menos elegante que el webhook pero requiere cero infraestructura adicional.</p>
+    <div class="code">
+# cloudwatch_poller.sh — script que corre via Process adapter cada 2 min
+#!/bin/bash
+ALARMS=$(aws cloudwatch describe-alarms \
+  --state-value ALARM \
+  --query 'MetricAlarms[].AlarmName' \
+  --output json)
+
+if [ "$ALARMS" != "[]" ]; then
+  # Llamar API de Paperclip para crear issue urgente
+  curl -X POST "$PAPERCLIP_URL/api/companies/$COMPANY_ID/issues" \
+    -H "Authorization: Bearer $PAPERCLIP_TOKEN" \
+    -d "{\"title\": \"ALARMA ACTIVA: $ALARMS\", \"priority\": \"urgent\"}"
+fi
+    </div>
+    <div class="sol-card">
+      <div class="st">Resultado</div>
+      <div class="sd">Tiempo de respuesta: 2-10 minutos. Sin codigo nuevo, solo un script bash y un agente process en Paperclip.</div>
+      <div class="sc"><span class="effort e1">Esfuerzo minimo</span> <span class="mono">script bash + 1 agente Paperclip</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- BRECHA 2: RCA / ML -->
+<div class="sec" id="s-b2">
+  <div class="brecha" style="background:#FCEBEB; border: 0.5px solid #F7C1C1;">
+    <div class="brecha-header">
+      <div class="brecha-num" style="background:#E24B4A; color:#fff;">2</div>
+      <div>
+        <div class="brecha-title" style="color:#501313;">Root Cause Analysis automatico con correlacion de telemetria</div>
+        <div style="font-size:12px;color:#A32D2D;">Los nativos correlacionan automaticamente deploys, logs, metricas e historial. OpsFleet solo analiza lo que el agente consulta explicitamente.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card" style="margin-bottom:12px;">
+    <div class="h3">Solucion 1 — SKILL.md de RCA estructurado (sin codigo, alto impacto)</div>
+    <p class="p" style="margin-bottom:10px;">La brecha no es solo tecnologica — es de protocolo. Un buen SKILL.md que le diga al agente exactamente QUE consultar, EN QUE ORDEN, y COMO correlacionarlo cierra el 70% de la brecha con los nativos para casos comunes. Claude Code es capaz del razonamiento; le falta la guia de que preguntar.</p>
+    <div class="code">
+# SKILL.md — Protocolo de RCA para OpsFleet
+## Cuando se activa una alerta, seguir SIEMPRE este orden:
+
+### 1. Contexto temporal (ultimos 30 min)
+- CloudWatch: metricas del servicio afectado
+- CloudTrail: cambios de infraestructura en las ultimas 2h
+- GitHub/ADO: deploys en las ultimas 4h
+
+### 2. Correlacion de eventos
+- Cruzar: timestamp del primer error vs timestamp del ultimo deploy
+- Cruzar: aumento de latencia vs cambios de configuracion
+- Buscar: pattern de error en logs similares al historial (references/incidents/)
+
+### 3. Hipotesis en orden de probabilidad
+1. Deploy reciente cambio algo (verificar primero)
+2. Recurso saturado (CPU/memoria/disco/conexiones)
+3. Dependencia externa fallo (API, base de datos, CDN)
+4. Problema de red/DNS/certificado
+
+### 4. Evidencia requerida antes de concluir
+- Screenshot de metrica antes/durante/despues
+- Commit o PR relacionado si aplica
+- Confirmacion de que el patron de error es nuevo
+    </div>
+    <div class="sol-card">
+      <div class="st">Resultado</div>
+      <div class="sd">RCA de calidad comparable a los nativos para los casos mas comunes (80% de incidentes). El agente sigue el protocolo sistematicamente en lugar de improvisar. La diferencia con los nativos es que este protocolo es manual/explicitamente guiado, no automatico con ML.</div>
+      <div class="sc"><span class="effort e1">Esfuerzo bajo</span> <span class="mono">2-4 dias escribir el SKILL.md de RCA</span> <span class="mono">sin codigo</span></div>
+    </div>
+  </div>
+
+  <div class="card" style="margin-bottom:12px;">
+    <div class="h3">Solucion 2 — Archivo de historial de incidentes como memoria de RCA</div>
+    <p class="p" style="margin-bottom:10px;">Cada vez que el CEO Agent cierra un incidente, guarda un resumen estructurado en un archivo <span class="mono">incidents/YYYY-MM-DD-nombre.md</span> en el directorio del agente. En el siguiente incidente, el agente lee el historial y busca patrones similares. Es memoria manual pero funciona.</p>
+    <div class="code">
+# incidents/2026-03-15-rds-high-connections.md
+## Incidente: RDS max_connections alcanzado
+- **Servicio afectado**: prod-banking-core RDS PostgreSQL
+- **Causa raiz**: deploy de api-v2.3.1 abrio connection pool sin limite
+- **Tiempo de deteccion**: 8 min (heartbeat Infra Agent)
+- **Tiempo de resolucion**: 22 min
+- **Solucion aplicada**: restart del servicio + config connection pool a 100
+- **Prevencion**: agregar alerta en CloudWatch para connections > 80%
+- **PR relacionado**: github.com/empresa/api/pull/234
+
+## Patron de reconocimiento
+- Metrica: DatabaseConnections > 95% del max
+- Correlacion tipica: deploy en las 2h anteriores
+- Primer paso: revisar connection pool config del servicio nuevo
+    </div>
+    <div class="sol-card">
+      <div class="st">Resultado</div>
+      <div class="sd">Con 10-20 incidentes documentados, el agente empieza a reconocer patrones y resuelve incidentes repetidos en minutos en lugar de horas. Es la memoria que Azure SRE Agent tiene nativa, pero construida incrementalmente.</div>
+      <div class="sc"><span class="effort e1">Esfuerzo bajo</span> <span class="mono">estructura del archivo + disciplina de documentar</span></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="h3">Solucion 3 — Integrar Amazon Bedrock o Claude API para analisis de logs a escala</div>
+    <p class="p" style="margin-bottom:10px;">Para volumen alto de logs (millones de eventos), el agente puede llamar a Bedrock/Claude API directamente con un batch de logs y pedir correlacion. Esto cierra la brecha de ML para analisis de patrones sin construir infraestructura propia.</p>
+    <div class="code">
+# En el SKILL.md del Infra Ops Agent:
+## Cuando el volumen de logs es alto (>10K lineas):
+1. Usar aws-api-mcp para CloudWatch Logs Insights query:
+   fields @timestamp, @message | filter @message like /ERROR/
+   | stats count() by bin(5m)
+   
+2. Si hay patron temporal claro: correlacionar con deploys de esa hora
+
+3. Si el patron no es claro: enviar muestra de 500 lineas a Claude API
+   con prompt: "identifica el patron de error mas frecuente y su posible causa"
+    </div>
+    <div class="sol-card">
+      <div class="st">Resultado</div>
+      <div class="sd">Analisis de logs a escala con identificacion de patrones. No es ML dedicado como el de AWS, pero Claude es capaz de identificar patrones en texto con alta precision.</div>
+      <div class="sc"><span class="effort e2">Esfuerzo medio</span> <span class="mono">configurar CloudWatch Logs Insights + prompt engineering</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- BRECHA 3: MEMORIA -->
+<div class="sec" id="s-b3">
+  <div class="brecha" style="background:#FAEEDA; border: 0.5px solid #FAC775;">
+    <div class="brecha-header">
+      <div class="brecha-num" style="background:#EF9F27; color:#fff;">3</div>
+      <div>
+        <div class="brecha-title" style="color:#412402;">Memoria persistente del entorno del cliente</div>
+        <div style="font-size:12px;color:#633806;">Azure SRE Agent aprende continuamente y recuerda cada investigacion. OpsFleet solo sabe lo que esta en SKILL.md.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card" style="margin-bottom:12px;">
+    <div class="h3">La buena noticia: Paperclip YA tiene sesion persistente en claude_local</div>
+    <p class="p" style="margin-bottom:8px;">Segun la documentacion real de Paperclip: <em>"El adapter persiste Claude Code session IDs entre heartbeats. En el siguiente wake, retoma la conversacion existente para que el agente retenga contexto completo."</em> Esto significa que el agente recuerda lo que hizo en heartbeats anteriores dentro de la misma sesion.</p>
+    <div class="sol-card">
+      <div class="st">Lo que ya funciona sin hacer nada</div>
+      <div class="sd">El agente retiene el historial de conversacion entre heartbeats consecutivos. Si investigas un incidente en el heartbeat de las 8am, el de las 4pm lo recuerda y puede hacer seguimiento.</div>
+      <div class="sc"><span class="effort e1">Ya disponible</span> <span class="mono">sin codigo adicional</span></div>
+    </div>
+  </div>
+
+  <div class="card" style="margin-bottom:12px;">
+    <div class="h3">Solucion 1 — Topologia de entorno en archivo JSON vivo</div>
+    <p class="p" style="margin-bottom:10px;">El Infra Ops Agent, al final de cada heartbeat, actualiza un archivo <span class="mono">topology/environment.json</span> con el estado actual de los recursos. En el siguiente heartbeat, lee ese archivo como contexto previo. Es una memoria estructurada y acumulativa.</p>
+    <div class="code">
+# topology/environment.json — actualizado cada 4h por Infra Agent
+{
+  "updated_at": "2026-04-03T08:00:00Z",
+  "accounts": {
+    "prod-banking-core": {
+      "ec2_instances": 12,
+      "rds_instances": 3,
+      "eks_clusters": ["banking-prod-eks"],
+      "known_issues": ["rds-connection-pool-limit-reached-2026-03-15"],
+      "alerts_active": 0,
+      "last_deploy": "2026-04-02T14:30:00Z",
+      "deploy_pr": "api/pull/241"
+    }
+  },
+  "baselines": {
+    "prod-banking-core_cpu_p95": 42.3,
+    "prod-banking-core_latency_p99_ms": 180,
+    "prod-banking-core_rds_connections_avg": 67
+  }
+}
+    </div>
+    <div class="sol-card">
+      <div class="st">Resultado</div>
+      <div class="sd">El agente tiene baselines historicos, conoce los incidentes anteriores, sabe el estado de los deploys recientes. No es ML automatico pero es memoria estructurada suficiente para el 80% de los casos.</div>
+      <div class="sc"><span class="effort e1">Esfuerzo bajo</span> <span class="mono">SKILL.md que instruye al agente a leer y actualizar el JSON</span></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="h3">Solucion 2 — Uso de embeddings para busqueda semantica en historial</div>
+    <p class="p" style="margin-bottom:10px;">Para cerrar completamente la brecha de memoria con los nativos, el camino es construir un vector store simple con los incidentes documentados. Cuando llega un nuevo incidente, el agente busca los mas similares semanticamente antes de investigar.</p>
+    <div class="arch-row">
+      <div class="arch-box"><div class="at">Nuevo incidente</div><div class="ad">Descripcion del error</div></div>
+      <div class="arrow-mid">→</div>
+      <div class="arch-box"><div class="at">Embeddings Claude/Bedrock</div><div class="ad">Vectoriza la descripcion</div></div>
+      <div class="arrow-mid">→</div>
+      <div class="arch-box"><div class="at">ChromaDB / pgvector</div><div class="ad">Busca incidentes similares</div></div>
+      <div class="arrow-mid">→</div>
+      <div class="arch-box"><div class="at">Contexto al agente</div><div class="ad">"Incidentes similares: X, Y, Z"<br>El agente usa eso como punto de partida</div></div>
+    </div>
+    <div class="sol-card">
+      <div class="st">Resultado</div>
+      <div class="sd">Memoria semantica real. El agente reconoce incidentes similares aunque la descripcion exacta sea diferente. Esta es la capacidad que tiene Azure SRE Agent de forma nativa.</div>
+      <div class="sc"><span class="effort e3">Esfuerzo alto</span> <span class="mono">ChromaDB + pipeline de embeddings + integracion</span> <span class="mono">~2 semanas de desarrollo</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- BRECHA 4: INTEGRACIONES -->
+<div class="sec" id="s-b4">
+  <div class="brecha" style="background:#FAEEDA; border: 0.5px solid #FAC775;">
+    <div class="brecha-header">
+      <div class="brecha-num" style="background:#EF9F27; color:#fff;">4</div>
+      <div>
+        <div class="brecha-title" style="color:#412402;">Integraciones nativas con herramientas enterprise</div>
+        <div style="font-size:12px;color:#633806;">PagerDuty, Slack, ServiceNow, Datadog out-of-the-box en nativos. OpsFleet requiere construirlos.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="g2">
+    <div class="card">
+      <div class="h3">Slack — la mas importante y la mas facil</div>
+      <div class="sol-card">
+        <div class="st">Opcion A: MCP server de Slack</div>
+        <div class="sd">Existe el MCP server de Slack (oficial). El CEO Agent puede publicar mensajes en canales del cliente directamente via MCP. <span class="mono">uvx @modelcontextprotocol/server-slack</span>. Sin codigo adicional.</div>
+        <div class="sc"><span class="effort e1">Esfuerzo minimo</span> <span class="mono">configurar MCP server + token de Slack</span></div>
+      </div>
+      <div class="sol-card">
+        <div class="st">Opcion B: Webhook saliente desde el alert router</div>
+        <div class="sd">El microservicio alert_router.py envia notificaciones a Slack cuando crea un issue urgente. El agente tambien puede usar el Slack MCP para actualizaciones durante la investigacion.</div>
+        <div class="sc"><span class="effort e1">Esfuerzo bajo</span> <span class="mono">5 lineas de codigo en el router</span></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="h3">PagerDuty — para escalacion de incidentes criticos</div>
+      <div class="sol-card">
+        <div class="st">Via HTTP adapter de Paperclip</div>
+        <div class="sd">El Security Agent o Infra Agent, cuando detecta un hallazgo CRITICO, llama a la API de PagerDuty via el adapter HTTP de Paperclip para crear un incident. La API de PagerDuty es REST simple.</div>
+        <div class="sc"><span class="effort e2">Esfuerzo medio</span> <span class="mono">adapter HTTP + configuracion PD API key</span></div>
+      </div>
+      <div class="sol-card">
+        <div class="st">Via MCP server custom de PagerDuty</div>
+        <div class="sd">Si hay un MCP server de PagerDuty disponible (la comunidad los construye rapidamente), el agente puede crear, actualizar y resolver incidents directamente. Buscar en <span class="mono">mcp.so</span> o construir con FastMCP en ~4 horas.</div>
+        <div class="sc"><span class="effort e2">Esfuerzo medio</span> <span class="mono">FastMCP + PD API = ~100 lineas Python</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card" style="margin-bottom:12px;">
+    <div class="h3">Datadog / New Relic / Dynatrace — observabilidad de terceros</div>
+    <p class="p" style="margin-bottom:10px;">Esta es la integracion mas valiosa despues de Slack. Si el cliente tiene Datadog, el agente deberia poder consultarlo. La solucion mas rapida es via MCP server.</p>
+    <div class="sol-card">
+      <div class="st">MCP servers de observabilidad (ya existen en la comunidad)</div>
+      <div class="sd">Datadog tiene un MCP server oficial en desarrollo. New Relic tambien. En tanto, existen MCP servers de la comunidad para ambos. El agente los usa exactamente igual que los de awslabs: <span class="mono">uvx datadog-mcp-server@latest</span>.</div>
+      <div class="sc"><span class="effort e1">Esfuerzo bajo</span> <span class="mono">buscar MCP server en mcp.so o construir con FastMCP</span></div>
+    </div>
+    <div class="sol-card">
+      <div class="st">Si no existe MCP server: usar la API REST directamente</div>
+      <div class="sd">Claude Code puede hacer llamadas HTTP directas a la API de Datadog desde el SKILL.md. Menos elegante pero funcional. El agente ejecuta <span class="mono">curl https://api.datadoghq.com/api/v2/metrics/...</span> con las credenciales configuradas como env vars.</div>
+      <div class="sc"><span class="effort e1">Esfuerzo minimo</span> <span class="mono">configurar API key como env var + instruccion en SKILL.md</span></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="h3">ServiceNow — para clientes enterprise con ITSM</div>
+    <div class="sol-card">
+      <div class="st">MCP server custom de ServiceNow con FastMCP</div>
+      <div class="sd">ServiceNow tiene API REST robusta. Un MCP server basico que crea/actualiza incidents toma 1-2 dias con FastMCP. Para clientes enterprise que exigen ServiceNow, esto es un diferenciador.</div>
+      <div class="sc"><span class="effort e2">Esfuerzo medio</span> <span class="mono">FastMCP + ServiceNow REST API = ~200 lineas Python</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- BRECHA 5: CONTINUIDAD -->
+<div class="sec" id="s-b5">
+  <div class="brecha" style="background:#E6F1FB; border: 0.5px solid #B5D4F4;">
+    <div class="brecha-header">
+      <div class="brecha-num" style="background:#378ADD; color:#fff;">5</div>
+      <div>
+        <div class="brecha-title" style="color:#042C53;">Continuidad y respaldo de proveedor</div>
+        <div style="font-size:12px;color:#185FA5;">Paperclip es un proyecto de 3 meses. AWS y Azure tienen SLA enterprise. Para clientes que ponen su operacion ahi, eso es un riesgo real.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="g2">
+    <div class="card">
+      <div class="h3">Solucion 1 — Self-hosted en infraestructura del cliente</div>
+      <p class="p">Paperclip corre en la infraestructura del cliente (EC2, Azure VM). Si Paperclip como proyecto desaparece, el codigo ya esta deployado y corriendo. El cliente no depende de un SaaS externo. La continuidad depende del fork de tu propio codigo.</p>
+      <div class="sol-card">
+        <div class="st">Accion</div>
+        <div class="sd">Siempre deployar Paperclip self-hosted con version fijada. Mantener un fork propio en el repo de OneTerminal. Nunca usar <span class="mono">latest</span> en produccion de un cliente — usar <span class="mono">v1.2.3</span> especifica.</div>
+        <div class="sc"><span class="effort e1">Esfuerzo bajo</span> <span class="mono">ya es parte del modelo de OpsFleet</span></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="h3">Solucion 2 — Arquitectura sin dependencia de Paperclip para alertas criticas</div>
+      <p class="p">El alert_router.py (brecha 1) puede funcionar independientemente de Paperclip. Si Paperclip cae, el router sigue recibiendo alertas y puede notificar por Slack/PagerDuty directamente.</p>
+      <div class="sol-card">
+        <div class="st">Accion</div>
+        <div class="sd">El microservicio de alertas tiene dos rutas: (1) normal → Paperclip API, (2) fallback → Slack directo si Paperclip no responde en 5 segundos. El cliente siempre recibe la alerta.</div>
+        <div class="sc"><span class="effort e1">Esfuerzo bajo</span> <span class="mono">timeout + fallback en el router</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="h3">Solucion 3 — El argumento correcto para el cliente (no tecnico)</div>
+    <p class="p" style="margin-bottom:10px;">La forma mas honesta de manejar esta brecha con el cliente es comunicacion clara desde el inicio. El argumento de venta correcto:</p>
+    <div class="sol-card">
+      <div class="st">Lo que le dices al cliente</div>
+      <div class="sd">"OpsFleet usa Paperclip, que es open source MIT deployado en tu propia infraestructura. Si manana Paperclip desaparece como proyecto, tu instancia sigue corriendo — no dependes de su cloud. Lo que si dependes es de Claude Code API de Anthropic para los LLM, que es un proveedor con mucha mas estabilidad que un proyecto de 3 meses."</div>
+      <div class="sc"><span class="effort e1">Sin costo de desarrollo</span> <span class="mono">es comunicacion, no codigo</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- ROADMAP DE CIERRE -->
+<div class="sec" id="s-roadmap">
+  <div class="card" style="margin-bottom:14px;">
+    <div class="h3">Vision: OpsFleet evolucionado en 12 meses</div>
+    <p class="p">Con las soluciones descritas implementadas progresivamente, OpsFleet cierra del 60% al 85% de la brecha con los agentes nativos — suficiente para el segmento PYME que es el mercado objetivo, a un precio significativamente menor.</p>
+  </div>
+
+  <div class="timeline">
+    <div class="tl-item" style="background:#E1F5EE;">
+      <div class="tl-label" style="color:#085041;">Mes 1-2 · Sin codigo</div>
+      <div class="tl-title" style="color:#085041;">OpsFleet v1</div>
+      <div class="tl-items" style="color:#0F6E56;">
+        SKILL.md de RCA<br>
+        Protocolo de incidentes<br>
+        topology/environment.json<br>
+        incidents/ historial<br>
+        Slack via MCP server<br>
+        <strong>Brecha cerrada: ~40%</strong>
+      </div>
+    </div>
+    <div class="tl-item" style="background:#FAEEDA;">
+      <div class="tl-label" style="color:#633806;">Mes 2-4 · Poco codigo</div>
+      <div class="tl-title" style="color:#633806;">OpsFleet v1.5</div>
+      <div class="tl-items" style="color:#854F0B;">
+        Alert Router (webhook receiver)<br>
+        PagerDuty MCP server<br>
+        Datadog/NR MCP servers<br>
+        Polling frecuente como fallback<br>
+        <strong>Brecha cerrada: ~65%</strong>
+      </div>
+    </div>
+    <div class="tl-item" style="background:#dbe4ff;">
+      <div class="tl-label" style="color:#1d4ed8;">Mes 4-8 · Desarrollo</div>
+      <div class="tl-title" style="color:#1d4ed8;">OpsFleet v2</div>
+      <div class="tl-items" style="color:#185FA5;">
+        Vector store de incidentes<br>
+        Embeddings + busqueda semantica<br>
+        ServiceNow MCP server<br>
+        Dashboard propio cliente<br>
+        <strong>Brecha cerrada: ~80%</strong>
+      </div>
+    </div>
+    <div class="tl-item" style="background:#EEEDFE;">
+      <div class="tl-label" style="color:#3C3489;">Mes 8-12 · Estrategia</div>
+      <div class="tl-title" style="color:#3C3489;">OpsFleet v3</div>
+      <div class="tl-items" style="color:#534AB7;">
+        OpsFleet orquesta los nativos<br>
+        AWS DevOps Agent via API<br>
+        Azure SRE Agent via MCP<br>
+        OpsFleet = capa de gobierno<br>
+        <strong>Brecha cerrada: ~95%</strong>
+      </div>
+    </div>
+  </div>
+
+  <div class="card" style="margin-bottom:12px;">
+    <div class="h3">La evolucion mas importante: v3 — OpsFleet como orquestador de nativos</div>
+    <p class="p" style="margin-bottom:10px;">En lugar de intentar replicar lo que AWS DevOps Agent hace (incidentes con RCA y ML), OpsFleet v3 lo integra. El CEO Agent de Paperclip recibe la alerta, evalua la severidad, y decide:</p>
+    <div class="arch-row">
+      <div class="arch-box"><div class="at">Alerta llega</div><div class="ad">Via webhook al alert router</div></div>
+      <div class="arrow-mid">→</div>
+      <div class="arch-box"><div class="at">CEO Agent evalua</div><div class="ad">Severidad, tipo, servicio afectado</div></div>
+      <div class="arrow-mid">→</div>
+      <div class="arch-box" style="border: 1.5px solid #E24B4A;"><div class="at" style="color:#791F1F;">CRITICO</div><div class="ad">Escala a AWS DevOps Agent via API<br>OpsFleet coordina la respuesta</div></div>
+    </div>
+    <div class="arch-row">
+      <div class="arch-box" style="opacity:0;"></div>
+      <div class="arrow-mid" style="opacity:0;">→</div>
+      <div class="arch-box" style="opacity:0;"></div>
+      <div class="arrow-mid">→</div>
+      <div class="arch-box" style="border: 1.5px solid #1D9E75;"><div class="at" style="color:#085041;">MEDIO / BAJO</div><div class="ad">Infra Ops Agent de OpsFleet<br>resuelve autonomamente</div></div>
+    </div>
+    <p class="p" style="margin-top:10px;">En este modelo, OpsFleet no compite con AWS DevOps Agent — lo usa como herramienta especializada para los casos que lo ameritan, mientras maneja el resto con sus propios agentes. Es la capa de gobierno por encima, no por debajo.</p>
+  </div>
+
+  <div class="card">
+    <div class="h3">Resumen de esfuerzo por brecha</div>
+    <table style="width:100%;border-collapse:collapse;font-size:12px;">
+      <thead><tr>
+        <th style="text-align:left;padding:7px 8px;border-bottom:0.5px solid var(--color-border-tertiary);font-size:11px;color:var(--color-text-secondary);font-weight:500;text-transform:uppercase;">Brecha</th>
+        <th style="text-align:left;padding:7px 8px;border-bottom:0.5px solid var(--color-border-tertiary);font-size:11px;color:var(--color-text-secondary);font-weight:500;text-transform:uppercase;">Solucion recomendada v1</th>
+        <th style="text-align:left;padding:7px 8px;border-bottom:0.5px solid var(--color-border-tertiary);font-size:11px;color:var(--color-text-secondary);font-weight:500;text-transform:uppercase;">Esfuerzo</th>
+        <th style="text-align:left;padding:7px 8px;border-bottom:0.5px solid var(--color-border-tertiary);font-size:11px;color:var(--color-text-secondary);font-weight:500;text-transform:uppercase;">Cierre %</th>
+      </tr></thead>
+      <tbody>
+        <tr><td style="padding:7px 8px;border-bottom:0.5px solid var(--color-border-tertiary);">Tiempo real</td><td style="padding:7px 8px;border-bottom:0.5px solid var(--color-border-tertiary);">Polling 2min + Alert Router webhook</td><td style="padding:7px 8px;border-bottom:0.5px solid var(--color-border-tertiary);"><span class="effort e1">2 dias</span></td><td style="padding:7px 8px;border-bottom:0.5px solid var(--color-border-tertiary);color:#0F6E56;font-weight:500;">70%</td></tr>
+        <tr><td style="padding:7px 8px;border-bottom:0.5px solid var(--color-border-tertiary);">RCA / correlacion</td><td style="padding:7px 8px;border-bottom:0.5px solid var(--color-border-tertiary);">SKILL.md RCA + historial incidents/</td><td style="padding:7px 8px;border-bottom:0.5px solid var(--color-border-tertiary);"><span class="effort e1">3 dias</span></td><td style="padding:7px 8px;border-bottom:0.5px solid var(--color-border-tertiary);color:#0F6E56;font-weight:500;">65%</td></tr>
+        <tr><td style="padding:7px 8px;border-bottom:0.5px solid var(--color-border-tertiary);">Memoria persistente</td><td style="padding:7px 8px;border-bottom:0.5px solid var(--color-border-tertiary);">topology.json + session persistence (ya existe)</td><td style="padding:7px 8px;border-bottom:0.5px solid var(--color-border-tertiary);"><span class="effort e1">1 dia</span></td><td style="padding:7px 8px;border-bottom:0.5px solid var(--color-border-tertiary);color:#0F6E56;font-weight:500;">60%</td></tr>
+        <tr><td style="padding:7px 8px;border-bottom:0.5px solid var(--color-border-tertiary);">Integraciones</td><td style="padding:7px 8px;border-bottom:0.5px solid var(--color-border-tertiary);">Slack MCP + PagerDuty HTTP adapter</td><td style="padding:7px 8px;border-bottom:0.5px solid var(--color-border-tertiary);"><span class="effort e1">2 dias</span></td><td style="padding:7px 8px;border-bottom:0.5px solid var(--color-border-tertiary);color:#0F6E56;font-weight:500;">75%</td></tr>
+        <tr><td style="padding:7px 8px;">Continuidad</td><td style="padding:7px 8px;">Self-hosted + version fijada + fallback Slack</td><td style="padding:7px 8px;"><span class="effort e1">1 dia</span></td><td style="padding:7px 8px;color:#0F6E56;font-weight:500;">80%</td></tr>
+      </tbody>
+    </table>
+    <p class="p" style="margin-top:10px;font-size:12px;"><strong>Total para OpsFleet v1.5 funcional:</strong> ~9 dias de desarrollo. Sin tocar el codigo de Paperclip. Sin infraestructura compleja. El 80% del valor con el 20% del esfuerzo.</p>
+  </div>
+</div>
+
+</div>
+<script>
+function show(id, btn) {
+  document.querySelectorAll('.sec').forEach(s => s.classList.remove('v'));
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('on'));
+  document.getElementById('s-' + id).classList.add('v');
+  btn.classList.add('on');
+}
+</script>

@@ -67,8 +67,10 @@ interface MarkdownEditorProps {
   bordered?: boolean;
   /** List of mentionable entities. Enables @-mention autocomplete. */
   mentions?: MentionOption[];
-  /** Called on Cmd/Ctrl+Enter */
+  /** Called on Cmd/Ctrl+Enter (or Enter when submitOnEnter is true) */
   onSubmit?: () => void;
+  /** When true, pressing Enter submits (Shift+Enter for new line). Default: false (Cmd/Ctrl+Enter submits). */
+  submitOnEnter?: boolean;
 }
 
 export interface MarkdownEditorRef {
@@ -416,6 +418,7 @@ export const MarkdownEditor = forwardRef<MarkdownEditorRef, MarkdownEditorProps>
   bordered = true,
   mentions,
   onSubmit,
+  submitOnEnter = false,
 }: MarkdownEditorProps, forwardedRef) {
   const { slashCommands } = useEditorAutocomplete();
   const containerRef = useRef<HTMLDivElement>(null);
@@ -771,12 +774,17 @@ export const MarkdownEditor = forwardRef<MarkdownEditorRef, MarkdownEditorProps>
         className,
       )}
       onKeyDownCapture={(e) => {
-        // Cmd/Ctrl+Enter to submit
-        if (onSubmit && e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
-          e.preventDefault();
-          e.stopPropagation();
-          onSubmit();
-          return;
+        // Cmd/Ctrl+Enter to submit (or plain Enter when submitOnEnter is enabled)
+        if (onSubmit && e.key === "Enter") {
+          const isModifiedEnter = e.metaKey || e.ctrlKey;
+          const isPlainEnter = !e.shiftKey && !e.metaKey && !e.ctrlKey && !e.altKey;
+          // Always submit on Cmd/Ctrl+Enter, or on plain Enter when submitOnEnter is enabled
+          if (isModifiedEnter || (submitOnEnter && isPlainEnter && !mentionActive)) {
+            e.preventDefault();
+            e.stopPropagation();
+            onSubmit();
+            return;
+          }
         }
 
         // Mention keyboard handling

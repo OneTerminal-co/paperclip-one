@@ -1,6 +1,7 @@
 node_modules/
 dist/
 .env
+.env.local
 *.tsbuildinfo
 drizzle/meta/
 .vite/
@@ -32,6 +33,7 @@ server/src/**/*.d.ts
 server/src/**/*.d.ts.map
 tmp/
 feedback-export-*
+packages/adapters/bedrock-adapter/scripts/bedrock-test-report.json
 
 # Editor / tool temp files
 *.tmp

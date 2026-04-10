@@ -1,0 +1,451 @@
+
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: var(--font-sans); color: var(--color-text-primary); }
+.w { padding: 1rem 0; max-width: 880px; }
+
+.agent-nav { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 1.5rem; }
+.anav { padding: 7px 16px; border-radius: 999px; border: 0.5px solid var(--color-border-secondary); font-size: 13px; cursor: pointer; background: transparent; color: var(--color-text-secondary); font-family: var(--font-sans); transition: all .15s; }
+.anav.on { color: #fff; border-color: transparent; font-weight: 500; }
+.anav:hover:not(.on) { background: var(--color-background-secondary); }
+
+.asec { display: none; }
+.asec.v { display: block; }
+
+.hero { border-radius: var(--border-radius-lg); padding: 1.25rem; margin-bottom: 14px; border: 0.5px solid var(--color-border-tertiary); }
+.hero-title { font-size: 18px; font-weight: 500; margin-bottom: 4px; }
+.hero-sub { font-size: 13px; line-height: 1.6; }
+
+.g2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 12px; margin-bottom: 12px; }
+.g3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; margin-bottom: 12px; }
+.card { background: var(--color-background-primary); border: 0.5px solid var(--color-border-tertiary); border-radius: var(--border-radius-lg); padding: 1rem 1.25rem; }
+.h3 { font-size: 11px; font-weight: 500; color: var(--color-text-secondary); margin-bottom: 8px; text-transform: uppercase; letter-spacing: .05em; }
+.h2 { font-size: 14px; font-weight: 500; margin-bottom: 6px; color: var(--color-text-primary); }
+.p { font-size: 13px; line-height: 1.6; color: var(--color-text-secondary); }
+.ul { list-style: none; }
+.ul li { font-size: 13px; color: var(--color-text-secondary); padding: 4px 0 4px 16px; position: relative; line-height: 1.5; border-bottom: 0.5px solid var(--color-border-tertiary); }
+.ul li:last-child { border-bottom: none; }
+.ul li::before { content: "›"; position: absolute; left: 0; color: var(--color-text-tertiary); font-weight: 500; }
+.div { height: 0.5px; background: var(--color-border-tertiary); margin: 10px 0; }
+
+.pill { display: inline-block; padding: 2px 9px; border-radius: 999px; font-size: 11px; font-weight: 500; margin-bottom: 6px; }
+.pg { background: #E1F5EE; color: #085041; }
+.pb { background: #E6F1FB; color: #0C447C; }
+.pa { background: #FAEEDA; color: #633806; }
+.pp { background: #EEEDFE; color: #3C3489; }
+.pr { background: #FCEBEB; color: #791F1F; }
+.pc { background: #FAECE7; color: #712B13; }
+.pgr { background: #F1EFE8; color: #444441; }
+
+.scenario { background: var(--color-background-secondary); border-radius: var(--border-radius-md); padding: .75rem 1rem; margin-bottom: 8px; border-left: 3px solid; border-radius: 0 var(--border-radius-md) var(--border-radius-md) 0; }
+.scenario .label { font-size: 11px; font-weight: 500; text-transform: uppercase; letter-spacing: .04em; margin-bottom: 4px; }
+.scenario .text { font-size: 13px; color: var(--color-text-secondary); line-height: 1.5; }
+.scenario .output { font-size: 12px; margin-top: 6px; color: var(--color-text-tertiary); font-style: italic; }
+
+.opt-card { border: 0.5px solid var(--color-border-tertiary); border-radius: var(--border-radius-md); padding: .75rem 1rem; margin-bottom: 8px; }
+.opt-card .ot { font-size: 13px; font-weight: 500; margin-bottom: 3px; }
+.opt-card .od { font-size: 12px; color: var(--color-text-secondary); line-height: 1.5; }
+.opt-card .val { font-size: 11px; margin-top: 4px; }
+
+.mono { font-family: var(--font-mono); font-size: 11px; background: var(--color-background-secondary); padding: 1px 5px; border-radius: 3px; color: var(--color-text-secondary); }
+
+.warn { background: #FAEEDA; border-radius: var(--border-radius-md); padding: .75rem 1rem; margin-top: 10px; }
+.warn .wt { font-size: 12px; font-weight: 500; color: #633806; margin-bottom: 3px; }
+.warn .wd { font-size: 12px; color: #854F0B; line-height: 1.5; }
+
+.val-box { background: #E1F5EE; border-radius: var(--border-radius-md); padding: .75rem 1rem; margin-top: 10px; }
+.val-box .vt { font-size: 12px; font-weight: 500; color: #085041; margin-bottom: 3px; }
+.val-box .vd { font-size: 12px; color: #0F6E56; line-height: 1.5; }
+
+.met-row { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 12px; }
+.met { flex: 1; min-width: 100px; background: var(--color-background-secondary); border-radius: var(--border-radius-md); padding: .6rem .9rem; }
+.met .n { font-size: 18px; font-weight: 500; }
+.met .l { font-size: 11px; color: var(--color-text-tertiary); }
+</style>
+
+<div class="w">
+<div class="agent-nav" id="anav">
+  <button class="anav on" style="background:#1D9E75;" onclick="showA('finops',this,'#1D9E75')">FinOps Agent</button>
+  <button class="anav" onclick="showA('security',this,'#A32D2D')">Security Agent</button>
+  <button class="anav" onclick="showA('infra',this,'#185FA5')">Infra Ops Agent</button>
+  <button class="anav" onclick="showA('knowledge',this,'#534AB7')">Knowledge Agent</button>
+  <button class="anav" onclick="showA('cicd',this,'#854F0B')">CI/CD Agent</button>
+  <button class="anav" onclick="showA('compliance',this,'#5F5E5A')">Compliance Agent</button>
+  <button class="anav" onclick="showA('ceo',this,'#3C3489')">CEO Agent</button>
+</div>
+
+<!-- FINOPS -->
+<div class="asec v" id="a-finops">
+  <div class="hero" style="background:#E1F5EE; border-color:#9FE1CB;">
+    <div class="pill pg">FinOps Agent — cada 8 horas</div>
+    <div class="hero-title" style="color:#085041;">El contador que nunca duerme y que ningun dev quiere ser</div>
+    <div class="hero-sub" style="color:#0F6E56;">Problema real: el 70% de las PYMEs cloud no sabe exactamente en qué se va su dinero. La factura llega a fin de mes y nadie la entiende. Este agente convierte esa caja negra en visibilidad diaria accionable.</div>
+  </div>
+  <div class="g2">
+    <div class="card">
+      <div class="h3">Que hace exactamente</div>
+      <ul class="ul">
+        <li>Consulta Cost Explorer org-wide y desglosa por cuenta, servicio, tag y equipo</li>
+        <li>Detecta anomalias: gasto que supera el umbral historico en mas del 20%</li>
+        <li>Identifica recursos idle: EC2 con CPU menor al 5%, RDS sin conexiones, EBS sin montar</li>
+        <li>Calcula rightsizing: compara familia de instancia actual vs recomendacion de Compute Optimizer</li>
+        <li>Revisa Reserved Instances y Savings Plans: detecta RI sin usar o sin renovar</li>
+        <li>En Azure: analiza suscripciones via Cost Management + Advisor recommendations</li>
+        <li>Genera reporte ejecutivo semanal: "esta semana gastaste $X, detecte $Y de ahorro posible"</li>
+      </ul>
+    </div>
+    <div class="card">
+      <div class="h3">Escenarios concretos que resuelve</div>
+      <div class="scenario" style="border-color:#1D9E75;">
+        <div class="label" style="color:#085041;">Escenario 1 — Ambiente dev siempre encendido</div>
+        <div class="text">El agente detecta que 8 instancias EC2 t3.large en la cuenta dev llevan 720h encendidas este mes sin actividad significativa.</div>
+        <div class="output">Output: "Costo innecesario estimado: $340 USD/mes. Recomendacion: schedule de apagado automatico entre 10pm y 6am."</div>
+      </div>
+      <div class="scenario" style="border-color:#1D9E75;">
+        <div class="label" style="color:#085041;">Escenario 2 — Anomalia de transferencia de datos</div>
+        <div class="text">Gasto en data transfer sube 300% en 48 horas. El agente cruza con CloudTrail y detecta un job de ETL mal configurado que replica datos entre regiones innecesariamente.</div>
+        <div class="output">Output: alerta inmediata al CEO Agent con causa probable y ticket generado.</div>
+      </div>
+      <div class="scenario" style="border-color:#1D9E75;">
+        <div class="label" style="color:#085041;">Escenario 3 — RI expirando sin renovar</div>
+        <div class="text">Detecta 3 Reserved Instances de RDS que expiran en 14 dias. Sin renovacion, el costo se triplica al volver a on-demand.</div>
+        <div class="output">Output: reporte al CTO con costo comparativo y recomendacion de Savings Plan alternativo.</div>
+      </div>
+    </div>
+  </div>
+  <div class="card" style="margin-bottom:12px;">
+    <div class="h3">Opciones adicionales a considerar</div>
+    <div class="opt-card">
+      <div class="ot">Agente FinOps con modo write (apagado automatico)</div>
+      <div class="od">En lugar de solo recomendar, el agente ejecuta: apaga instancias dev fuera de horario laboral, elimina snapshots EBS huerfanos, borra AMIs sin usar. Requiere permisos write aprobados por el board.</div>
+      <div class="val"><span class="pill pg">Alto valor</span> — ahorro real automatizado, no solo reportes</div>
+    </div>
+    <div class="opt-card">
+      <div class="ot">Forecasting mensual con alertas de presupuesto</div>
+      <div class="od">El agente proyecta el gasto del mes en curso basado en los primeros 7 dias. Si la proyeccion supera el budget aprobado, alerta al CTO antes de que ocurra, no despues.</div>
+      <div class="val"><span class="pill pg">Alto valor</span> — especialmente en empresas con control estricto de presupuesto</div>
+    </div>
+    <div class="opt-card">
+      <div class="ot">Tag enforcement y chargeback interno</div>
+      <div class="od">Detecta recursos sin tags obligatorios (proyecto, equipo, ambiente). Genera reporte de chargeback por equipo. Muy util en empresas con multiples equipos compartiendo una cuenta.</div>
+      <div class="val"><span class="pill pa">Valor medio</span> — requiere que el cliente tenga cultura de tagging previa</div>
+    </div>
+  </div>
+  <div class="val-box">
+    <div class="vt">Metrica de valor para el pitch</div>
+    <div class="vd">El benchmark de mercado dice que el 30-35% del gasto cloud es desperdicio en empresas sin FinOps formal. En un cliente que paga $10.000 USD/mes en AWS, el agente puede identificar $3.000 USD/mes de ahorro — 6x el costo del plan Professional de OpsFleet.</div>
+  </div>
+</div>
+
+<!-- SECURITY -->
+<div class="asec" id="a-security">
+  <div class="hero" style="background:#FCEBEB; border-color:#F7C1C1;">
+    <div class="pill pr">Security Agent — cada 12 horas</div>
+    <div class="hero-title" style="color:#501313;">El que encuentra los huecos antes de que los encuentre otro</div>
+    <div class="hero-sub" style="color:#791F1F;">Problema real: la mayoria de brechas de seguridad en PYMEs cloud no son ataques sofisticados — son configuraciones mal hechas que llevan meses sin que nadie las vea. Un bucket S3 publico, un security group con puerto 22 abierto al mundo, credenciales de acceso de un ex-empleado que nunca se revocaron.</div>
+  </div>
+  <div class="g2">
+    <div class="card">
+      <div class="h3">Que hace exactamente</div>
+      <ul class="ul">
+        <li>Revisa SecurityHub org-wide: agrega findings de todas las cuentas y prioriza por severidad CRITICO / ALTO / MEDIO</li>
+        <li>Audita IAM: usuarios con MFA desactivado, roles con permisos excesivos (AdministratorAccess en produccion), access keys sin rotar en mas de 90 dias</li>
+        <li>Revisa Security Groups: reglas 0.0.0.0/0 en puertos criticos (22, 3389, 5432, 3306)</li>
+        <li>Detecta buckets S3 publicos o con ACLs permisivas no intencionales</li>
+        <li>Revisa GuardDuty: amenazas detectadas, IPs maliciosas, comportamiento anomalo de credenciales</li>
+        <li>En Azure: Defender for Cloud score, recomendaciones por suscripcion, alertas de Sentinel</li>
+        <li>Cruza hallazgos con aws-knowledge-mcp-server para obtener SOPs de remediacion actualizados</li>
+      </ul>
+    </div>
+    <div class="card">
+      <div class="h3">Escenarios concretos que resuelve</div>
+      <div class="scenario" style="border-color:#E24B4A;">
+        <div class="label" style="color:#501313;">Escenario 1 — Credencial de ex-empleado activa</div>
+        <div class="text">El agente detecta un IAM user "jperez" con access key activa, ultimo uso hace 3 dias, pero ese usuario fue dado de baja del sistema de RRHH hace 6 semanas.</div>
+        <div class="output">Output: alerta CRITICA al CEO Agent. Ticket generado: "Revocar acceso de jperez inmediatamente".</div>
+      </div>
+      <div class="scenario" style="border-color:#E24B4A;">
+        <div class="label" style="color:#501313;">Escenario 2 — Puerto de base de datos expuesto</div>
+        <div class="text">Security Group de RDS en produccion tiene puerto 5432 abierto a 0.0.0.0/0. Lleva 4 meses asi desde que un dev lo abrio "temporalmente" para hacer debug.</div>
+        <div class="output">Output: finding CRITICO con instrucciones de remediacion especificas y numero de CVEs que ese vector tiene.</div>
+      </div>
+      <div class="scenario" style="border-color:#E24B4A;">
+        <div class="label" style="color:#501313;">Escenario 3 — GuardDuty: comportamiento anomalo</div>
+        <div class="text">Un Lambda function empieza a hacer llamadas a IPs en rangos conocidos de C&C malware a las 3am. GuardDuty lo detecta, el Security Agent lo procesa y lo escala con contexto.</div>
+        <div class="output">Output: alerta inmediata con IP, funcion afectada, patron de trafico y SOP de contencion.</div>
+      </div>
+    </div>
+  </div>
+  <div class="card" style="margin-bottom:12px;">
+    <div class="h3">Opciones adicionales a considerar</div>
+    <div class="opt-card">
+      <div class="ot">Rotacion automatica de secrets en Key Vault / Secrets Manager</div>
+      <div class="od">El agente detecta secrets con mas de 90 dias sin rotar y puede disparar el proceso de rotacion automatica si tiene permisos write. Util para tokens de integraciones, API keys, certificados SSL.</div>
+      <div class="val"><span class="pill pr">Critico en banca y salud</span> — es un requisito de cumplimiento, no solo buena practica</div>
+    </div>
+    <div class="opt-card">
+      <div class="ot">Escaneo de imagenes de contenedor (SAST/SCA)</div>
+      <div class="od">Integrar Trivy o Inspector v2 de AWS para escanear imagenes en ECR/ACR en busca de CVEs. El agente reporta vulnerabilidades criticas por imagen y tag.</div>
+      <div class="val"><span class="pill pr">Alto valor</span> — especialmente si el cliente tiene pipelines de contenedores en produccion</div>
+    </div>
+    <div class="opt-card">
+      <div class="ot">Simulacion de escalada de privilegios (read-only)</div>
+      <div class="od">El agente analiza las politicas IAM existentes y detecta cadenas de permisos que podrian permitir escalada de privilegios aunque ninguna politica individual sea obvia. Tecnica de IAM privilege analysis.</div>
+      <div class="val"><span class="pill pa">Valor alto, complejidad alta</span> — diferenciador fuerte para clientes regulados</div>
+    </div>
+  </div>
+  <div class="warn">
+    <div class="wt">Limite critico a comunicar al cliente</div>
+    <div class="wd">Este agente detecta y alerta. NO hace penetration testing activo. NO explota vulnerabilidades. Si el cliente necesita un pentest formal, eso es un servicio separado. El agente es postura defensiva continua, no ofensiva.</div>
+  </div>
+</div>
+
+<!-- INFRA OPS -->
+<div class="asec" id="a-infra">
+  <div class="hero" style="background:#E6F1FB; border-color:#B5D4F4;">
+    <div class="pill pb">Infra Ops Agent — cada 4 horas</div>
+    <div class="hero-title" style="color:#042C53;">El SRE que revisa la salud del sistema mientras el equipo duerme</div>
+    <div class="hero-sub" style="color:#185FA5;">Problema real: los equipos pequenos no tienen on-call formal. Cuando un nodo de Kubernetes falla a las 2am o un RDS se queda sin espacio en disco, se enteran cuando el cliente llama. Este agente corre cada 4 horas y reporta el estado real de la infraestructura.</div>
+  </div>
+  <div class="g2">
+    <div class="card">
+      <div class="h3">Que hace exactamente</div>
+      <ul class="ul">
+        <li>Revisa estado de EC2/VMs: instancias en estado degradado, alta utilizacion de CPU/memoria sostenida</li>
+        <li>Kubernetes/AKS/EKS: nodos NotReady, pods en CrashLoopBackOff, deployments con replicas por debajo del minimo</li>
+        <li>RDS/Azure SQL/Cosmos: espacio en disco, conexiones activas vs max, replication lag en replicas</li>
+        <li>Lambda/Functions: tasa de errores, timeouts, throttling sostenido</li>
+        <li>Load Balancers: healthy host count, 5XX rate en ALB/API Gateway</li>
+        <li>Revisa CDK stack drift: detecta recursos que divergen del estado declarado en IaC</li>
+        <li>Compara configuracion actual vs best practices via cdk-mcp-server y aws-knowledge</li>
+      </ul>
+    </div>
+    <div class="card">
+      <div class="h3">Escenarios concretos que resuelve</div>
+      <div class="scenario" style="border-color:#4a9eed;">
+        <div class="label" style="color:#042C53;">Escenario 1 — RDS al 90% de capacidad de disco</div>
+        <div class="text">El agente detecta que la instancia de PostgreSQL en produccion tiene el disco al 91% de capacidad. Al ritmo actual de crecimiento, se llena en 6 dias.</div>
+        <div class="output">Output: alerta con proyeccion de llenado, opciones de expansion (modify storage) y costo estimado de cada opcion.</div>
+      </div>
+      <div class="scenario" style="border-color:#4a9eed;">
+        <div class="label" style="color:#042C53;">Escenario 2 — Pod en CrashLoopBackOff silencioso</div>
+        <div class="text">Un microservicio de notificaciones lleva 3 horas en CrashLoopBackOff en el namespace de produccion. El equipo no lo sabia porque no habia alerta configurada para ese namespace.</div>
+        <div class="output">Output: alerta con nombre del pod, logs del ultimo crash, y runbook recomendado del knowledge server.</div>
+      </div>
+      <div class="scenario" style="border-color:#4a9eed;">
+        <div class="label" style="color:#042C53;">Escenario 3 — IaC drift detectado</div>
+        <div class="text">Un dev modifico manualmente un Security Group en la consola de AWS sin actualizar el CDK. El agente detecta que el estado real diverge del declarado en el stack.</div>
+        <div class="output">Output: reporte de drift con diff exacto entre estado actual y estado esperado por IaC.</div>
+      </div>
+    </div>
+  </div>
+  <div class="card" style="margin-bottom:12px;">
+    <div class="h3">Opciones adicionales a considerar</div>
+    <div class="opt-card">
+      <div class="ot">Agente con observabilidad OTel (Prometheus + Grafana)</div>
+      <div class="od">Si el cliente tiene OpenTelemetry desplegado, el agente puede consultar metricas de aplicacion reales (latencia p99, tasa de errores de negocio) en lugar de solo metricas de infraestructura. Mucho mas valor pero requiere que el cliente tenga OTel instrumentado.</div>
+      <div class="val"><span class="pill pb">Alto valor</span> — diferencia entre monitoreo de infra y monitoreo de negocio</div>
+    </div>
+    <div class="opt-card">
+      <div class="ot">Agente de DRP (Disaster Recovery)</div>
+      <div class="od">Verifica periodicamente que los backups se estan ejecutando y son restaurables. Comprueba que los snapshots de RDS son recientes. Valida que el failover de multi-AZ esta configurado. Genera reporte mensual de estado de DRP.</div>
+      <div class="val"><span class="pill pb">Critico para banca y salud</span> — es lo primero que pregunta una auditoria</div>
+    </div>
+    <div class="opt-card">
+      <div class="ot">Agente de performance (rightsizing proactivo)</div>
+      <div class="od">Analiza metricas de utilizacion de los ultimos 30 dias y genera recomendaciones de rightsizing: que instancias escalar, cuales reducir, cuales migrar a Graviton. Cruza con el FinOps Agent para calcular impacto economico.</div>
+      <div class="val"><span class="pill pa">Valor medio-alto</span> — genera ahorro y mejora de performance al mismo tiempo</div>
+    </div>
+  </div>
+</div>
+
+<!-- KNOWLEDGE -->
+<div class="asec" id="a-knowledge">
+  <div class="hero" style="background:#EEEDFE; border-color:#CECBF6;">
+    <div class="pill pp">Knowledge Agent — on-demand via tickets</div>
+    <div class="hero-title" style="color:#26215C;">El arquitecto de referencia disponible 24/7 para preguntas tecnicas</div>
+    <div class="hero-sub" style="color:#3C3489;">Problema real: el equipo tecnico de la PYME pierde horas buscando en documentacion AWS/Azure, Stack Overflow y foros. Muchas decisiones de arquitectura se toman con informacion desactualizada o incompleta porque buscar bien es caro en tiempo.</div>
+  </div>
+  <div class="g2">
+    <div class="card">
+      <div class="h3">Que hace exactamente</div>
+      <ul class="ul">
+        <li>Responde preguntas tecnicas especificas sobre AWS y Azure via aws-knowledge-mcp-server (docs en tiempo real)</li>
+        <li>Busca y resume best practices para un servicio especifico: "como configurar VPC endpoints para RDS"</li>
+        <li>Genera runbooks: "pasos para hacer un failover de RDS Multi-AZ de forma segura"</li>
+        <li>Evalua decisiones de arquitectura: "es mejor usar SQS o EventBridge para este caso de uso"</li>
+        <li>Documenta lo que el equipo hace: convierte conversaciones en documentacion estructurada</li>
+        <li>Responde sobre disponibilidad regional de servicios: "esta disponible X en sa-east-1"</li>
+      </ul>
+    </div>
+    <div class="card">
+      <div class="h3">Escenarios concretos que resuelve</div>
+      <div class="scenario" style="border-color:#8b5cf6;">
+        <div class="label" style="color:#26215C;">Escenario 1 — Decision de arquitectura urgente</div>
+        <div class="text">El equipo necesita decidir entre API Gateway HTTP API vs REST API para un nuevo microservicio. El Knowledge Agent consulta la documentacion actual, compara features, limitaciones y precios, y genera un ADR (Architecture Decision Record).</div>
+        <div class="output">Output: ADR completo con pro/contras, precio estimado y recomendacion justificada.</div>
+      </div>
+      <div class="scenario" style="border-color:#8b5cf6;">
+        <div class="label" style="color:#26215C;">Escenario 2 — Runbook para un incidente</div>
+        <div class="text">El Infra Ops Agent detecta que un cluster EKS tiene nodos en estado NotReady. El Knowledge Agent genera el runbook de diagnostico y recuperacion especifico para EKS 1.29 en la region del cliente.</div>
+        <div class="output">Output: runbook paso a paso con comandos kubectl exactos y criterios de exito.</div>
+      </div>
+      <div class="scenario" style="border-color:#8b5cf6;">
+        <div class="label" style="color:#26215C;">Escenario 3 — Evaluacion de nueva feature de AWS</div>
+        <div class="text">AWS anuncia una nueva feature de RDS. El equipo quiere saber si aplica a su caso. El Knowledge Agent busca la documentacion, extrae los requisitos y evalua si el cliente puede adoptarla.</div>
+        <div class="output">Output: resumen ejecutivo de la feature + evaluacion de applicabilidad al entorno del cliente.</div>
+      </div>
+    </div>
+  </div>
+  <div class="warn">
+    <div class="wt">Limitacion importante a ser honesto con el cliente</div>
+    <div class="wd">Este agente es tan bueno como el contexto que tiene del entorno del cliente. Sin un SKILLS.md bien construido que describa la arquitectura, los servicios usados y las decisiones ya tomadas, las respuestas son genericas. El valor real emerge despues de 2-4 semanas de uso cuando el agente ha acumulado contexto especifico.</div>
+  </div>
+</div>
+
+<!-- CI/CD -->
+<div class="asec" id="a-cicd">
+  <div class="hero" style="background:#FAEEDA; border-color:#FAC775;">
+    <div class="pill pa">CI/CD Agent — cada 6 horas + webhooks</div>
+    <div class="hero-title" style="color:#412402;">El que detecta que el pipeline esta roto antes de que el dev lo intente usar</div>
+    <div class="hero-sub" style="color:#633806;">Problema real: los pipelines de CI/CD se rompen silenciosamente. Un job de noche falla, nadie lo ve hasta la manana siguiente cuando alguien quiere hacer deploy. O peor: el pipeline pasa pero el deploy va a produccion con una vulnerabilidad porque el step de SAST estaba deshabilitado "temporalmente".</div>
+  </div>
+  <div class="g2">
+    <div class="card">
+      <div class="h3">Que hace exactamente</div>
+      <ul class="ul">
+        <li>Monitorea GitHub Actions / Azure DevOps pipelines: workflows fallidos, jobs colgados, runners sin capacidad</li>
+        <li>Detecta pipelines que pasaron pero con steps de seguridad deshabilitados o skipped</li>
+        <li>Revisa tiempo de ciclo (cycle time) y detecta degradacion: si el pipeline que tardaba 8 minutos ahora tarda 25, investiga por que</li>
+        <li>Analiza tasa de fallo por rama, por servicio, por tipo de test — encuentra los flaky tests</li>
+        <li>Revisa que los ambientes de staging se estan actualizando correctamente despues de cada merge</li>
+        <li>Detecta deploys a produccion fuera de ventana de cambio aprobada</li>
+        <li>Genera DORA metrics: deployment frequency, lead time, MTTR, change failure rate</li>
+      </ul>
+    </div>
+    <div class="card">
+      <div class="h3">Escenarios concretos que resuelve</div>
+      <div class="scenario" style="border-color:#f59e0b;">
+        <div class="label" style="color:#412402;">Escenario 1 — Flaky test que bloquea el equipo</div>
+        <div class="text">El agente detecta que el test "integration/payment-flow" falla el 40% de las veces sin cambios en el codigo. El equipo ha estado reejecutando el pipeline manualmente 2 veces por dia.</div>
+        <div class="output">Output: reporte con el test especifico, patron de fallos (falla mas en horario de carga) y recomendacion de aislamiento.</div>
+      </div>
+      <div class="scenario" style="border-color:#f59e0b;">
+        <div class="label" style="color:#412402;">Escenario 2 — Deploy a produccion sin aprobacion</div>
+        <div class="text">Un dev hace merge directamente a main sin pasar por el proceso de aprobacion del branch protection. El pipeline corre y despliega a produccion automaticamente.</div>
+        <div class="output">Output: alerta inmediata al CEO Agent con el commit, el autor y el timestamp. Genera ticket de revision.</div>
+      </div>
+      <div class="scenario" style="border-color:#f59e0b;">
+        <div class="label" style="color:#412402;">Escenario 3 — DORA metrics deterioradas</div>
+        <div class="text">El deployment frequency bajo de 8 deploys/semana a 2 en el ultimo mes. El agente cruza con los datos de pipeline y detecta que el culpable es un step de pruebas de integracion que paso de 5 a 22 minutos.</div>
+        <div class="output">Output: reporte de DORA con tendencia, causa probable y recomendacion de optimizacion.</div>
+      </div>
+    </div>
+  </div>
+  <div class="val-box">
+    <div class="vt">Por que este agente es un diferenciador fuerte de OpsFleet</div>
+    <div class="vd">Ningun otro servicio de monitoreo cloud incluye CI/CD como parte del paquete base. Es el puente entre operaciones e ingenieria. El CTO puede ver en un dashboard: "el equipo despliega 5 veces por semana con 98% de exito" — eso es valor directo de negocio medible.</div>
+  </div>
+</div>
+
+<!-- COMPLIANCE -->
+<div class="asec" id="a-compliance">
+  <div class="hero" style="background:#F1EFE8; border-color:#D3D1C7;">
+    <div class="pill pgr">Compliance Agent — semanal + pre-auditoria</div>
+    <div class="hero-title" style="color:#2C2C2A;">El que prepara la evidencia antes de que llegue el auditor</div>
+    <div class="hero-sub" style="color:#5F5E5A;">Problema real: una auditoria ISO 27001, SOC2 o de la SFC tarda semanas en preparar la evidencia manualmente. El equipo tecnico dedica 2-3 semanas completas a recolectar logs, configuraciones y reportes. Este agente hace eso de forma continua y entrega la evidencia lista.</div>
+  </div>
+  <div class="g2">
+    <div class="card">
+      <div class="h3">Que hace exactamente</div>
+      <ul class="ul">
+        <li>Evalua controles contra frameworks: CIS AWS Benchmark, NIST CSF, ISO 27001 Annex A via awslabs OSCAL MCP server</li>
+        <li>Genera evidencia de cumplimiento automatica: "el cifrado en reposo esta activo en todos los servicios de datos desde fecha X"</li>
+        <li>Detecta desviaciones de la linea base de compliance antes de que sean hallazgos de auditoria</li>
+        <li>Rastrea que los controles compensatorios documentados siguen activos</li>
+        <li>Genera reporte de estado de compliance por control, por servicio y por suscripcion/cuenta</li>
+        <li>En Azure: evalua Azure Policy compliance report y genera evidencia de remediacion</li>
+        <li>Mantiene un historial de estado de compliance para demostrar mejora continua</li>
+      </ul>
+    </div>
+    <div class="card">
+      <div class="h3">Escenarios concretos que resuelve</div>
+      <div class="scenario" style="border-color:#888780;">
+        <div class="label" style="color:#2C2C2A;">Escenario 1 — Preparacion de auditoria SOC2</div>
+        <div class="text">El cliente tiene auditoria SOC2 Type II en 6 semanas. El agente genera el reporte de estado de los controles CC6 (acceso logico) y CC7 (operaciones del sistema) con evidencia lista para el auditor.</div>
+        <div class="output">Output: reporte de 47 controles con estado PASS/FAIL/N/A y evidencia exportable en PDF.</div>
+      </div>
+      <div class="scenario" style="border-color:#888780;">
+        <div class="label" style="color:#2C2C2A;">Escenario 2 — Control de cifrado caido silenciosamente</div>
+        <div class="text">Alguien creo un bucket S3 nuevo para un proyecto sin activar el cifrado por defecto. El control CIS 2.1.1 falla. El agente lo detecta en 6 horas.</div>
+        <div class="output">Output: finding con control especifico violado, recurso afectado, y pasos de remediacion.</div>
+      </div>
+      <div class="scenario" style="border-color:#888780;">
+        <div class="label" style="color:#2C2C2A;">Escenario 3 — Reporte SFC para fintech</div>
+        <div class="text">Cliente fintech regulado por la SFC necesita demostrar que los datos de clientes estan cifrados y el acceso esta auditado. El agente genera el reporte mensual de accesos a datos sensibles via CloudTrail.</div>
+        <div class="output">Output: reporte de accesos exportable, firma temporal de integridad del log, listo para presentar al regulador.</div>
+      </div>
+    </div>
+  </div>
+  <div class="val-box">
+    <div class="vt">El segmento que mas paga por este agente</div>
+    <div class="vd">Fintech reguladas por SFC, clinicas y EPS con datos sensibles, y empresas que quieren ISO 27001 para poder vender a enterprise. Para ellas el compliance no es nice-to-have — es bloqueador de negocio. Un agente que automatiza la evidencia puede justificar solo el plan Enterprise completo.</div>
+  </div>
+</div>
+
+<!-- CEO -->
+<div class="asec" id="a-ceo">
+  <div class="hero" style="background:#EEEDFE; border-color:#AFA9EC;">
+    <div class="pill pp">CEO Agent — diario</div>
+    <div class="hero-title" style="color:#26215C;">El coordinador que convierte ruido tecnico en decisiones ejecutivas</div>
+    <div class="hero-sub" style="color:#3C3489;">Problema real: el CTO recibe demasiadas alertas de demasiados sistemas y no puede distinguir lo critico de lo importante de lo irrelevante. El CEO Agent filtra, prioriza, agrupa y presenta una sola vista ejecutiva de lo que paso, lo que importa y lo que requiere decision.</div>
+  </div>
+  <div class="g2">
+    <div class="card">
+      <div class="h3">Que hace exactamente</div>
+      <ul class="ul">
+        <li>Recibe outputs de todos los agentes (FinOps, Security, Infra, CI/CD, Compliance)</li>
+        <li>Prioriza hallazgos: CRITICO (requiere accion hoy), IMPORTANTE (esta semana), INFORMATIVO (reporte mensual)</li>
+        <li>Genera el reporte ejecutivo diario: 1 pagina, sin jerga tecnica, orientado a decision</li>
+        <li>Escala al board (CTO) solo lo que requiere aprobacion humana — no satura con ruido</li>
+        <li>Coordina agentes cuando un hallazgo requiere accion cruzada (ej: Security detecta anomalia, Infra verifica el recurso, Knowledge genera el runbook)</li>
+        <li>Mantiene el contexto del entorno del cliente en SKILLS.md actualizado</li>
+        <li>Genera el reporte semanal de salud del sistema listo para presentar en el standup del CTO</li>
+      </ul>
+    </div>
+    <div class="card">
+      <div class="h3">Escenarios de coordinacion</div>
+      <div class="scenario" style="border-color:#8b5cf6;">
+        <div class="label" style="color:#26215C;">Coordinacion multi-agente</div>
+        <div class="text">Security Agent detecta una anomalia de credenciales. CEO Agent activa: (1) Infra Agent para verificar que recursos accedio esa credencial, (2) Knowledge Agent para obtener el SOP de contencion, (3) alerta al board con resumen de los 3 inputs.</div>
+        <div class="output">El CTO recibe un solo mensaje con contexto completo, no 3 alertas separadas que tiene que correlacionar el.</div>
+      </div>
+      <div class="scenario" style="border-color:#8b5cf6;">
+        <div class="label" style="color:#26215C;">Reporte ejecutivo semanal</div>
+        <div class="text">Todos los viernes a las 8am, el CEO Agent sintetiza la semana: gasto cloud (+X% vs semana anterior), hallazgos de seguridad (N criticos, M resueltos), salud de infra (uptime 99.8%), estado de pipelines (Y deploys, Z% exito).</div>
+        <div class="output">Un solo email/Slack al CTO. Sin abrir 5 dashboards distintos.</div>
+      </div>
+    </div>
+  </div>
+  <div class="card" style="margin-bottom:12px;">
+    <div class="h3">Por que el CEO Agent es el producto en si mismo</div>
+    <p class="p">Los otros agentes son la tecnologia. El CEO Agent es la interfaz. Lo que el cliente compra no es "acceso a awslabs/mcp" — compra recibir cada manana un reporte claro de que esta pasando con su infraestructura sin tener que entender CloudWatch, SecurityHub ni Cost Explorer. El CEO Agent es la capa de traduccion entre la complejidad tecnica y la decision ejecutiva.</p>
+  </div>
+  <div class="val-box">
+    <div class="vt">El argumento de venta del CEO Agent</div>
+    <div class="vd">"Tu CTO recibe un solo mensaje cada manana con todo lo que importa. No 47 alertas de CloudWatch, no 12 emails de SecurityHub, no el dashboard de Cost Explorer que nadie abre. Un mensaje. Una decision. Eso es OpsFleet."</div>
+  </div>
+</div>
+
+</div>
+
+<script>
+function showA(id, btn, color) {
+  document.querySelectorAll('.asec').forEach(s => s.classList.remove('v'));
+  document.querySelectorAll('.anav').forEach(b => { b.classList.remove('on'); b.style.background = 'transparent'; b.style.color = 'var(--color-text-secondary)'; });
+  document.getElementById('a-' + id).classList.add('v');
+  btn.classList.add('on');
+  btn.style.background = color;
+  btn.style.color = '#fff';
+}
+</script>
