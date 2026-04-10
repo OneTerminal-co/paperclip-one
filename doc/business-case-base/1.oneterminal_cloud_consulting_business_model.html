@@ -1,0 +1,485 @@
+
+<style>
+:root {
+  --ot-bg: var(--color-background-tertiary);
+  --card: var(--color-background-primary);
+  --border: var(--color-border-tertiary);
+  --text: var(--color-text-primary);
+  --muted: var(--color-text-secondary);
+  --hint: var(--color-text-tertiary);
+  --radius: var(--border-radius-lg);
+  --accent: #0F6E56;
+  --accent-light: #E1F5EE;
+  --accent-mid: #1D9E75;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: var(--font-sans); color: var(--text); }
+
+.shell { padding: 1.5rem 0; max-width: 860px; }
+
+.tabs { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 1.5rem; }
+.tab {
+  padding: 6px 14px; border-radius: 999px; border: 0.5px solid var(--border);
+  font-size: 13px; cursor: pointer; background: transparent; color: var(--muted);
+  transition: all .15s;
+}
+.tab.active { background: var(--accent); color: #fff; border-color: transparent; font-weight: 500; }
+.tab:hover:not(.active) { background: var(--color-background-secondary); }
+
+.section { display: none; }
+.section.visible { display: block; }
+
+.grid2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 12px; margin-bottom: 16px; }
+.grid3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; margin-bottom: 16px; }
+.grid4 { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin-bottom: 16px; }
+
+.card {
+  background: var(--card); border: 0.5px solid var(--border);
+  border-radius: var(--radius); padding: 1rem 1.25rem;
+}
+.card-accent { border-left: 3px solid var(--accent-mid); }
+
+.pill {
+  display: inline-block; padding: 2px 10px; border-radius: 999px;
+  font-size: 11px; font-weight: 500; margin-bottom: 8px;
+}
+.pill-green { background: #E1F5EE; color: #0F6E56; }
+.pill-blue { background: #E6F1FB; color: #185FA5; }
+.pill-amber { background: #FAEEDA; color: #854F0B; }
+.pill-purple { background: #EEEDFE; color: #3C3489; }
+.pill-coral { background: #FAECE7; color: #993C1D; }
+.pill-gray { background: var(--color-background-secondary); color: var(--muted); }
+
+.h2 { font-size: 15px; font-weight: 500; margin-bottom: 4px; }
+.h3 { font-size: 13px; font-weight: 500; color: var(--muted); margin-bottom: 6px; text-transform: uppercase; letter-spacing: .04em; }
+.p { font-size: 13px; line-height: 1.6; color: var(--muted); }
+.price { font-size: 22px; font-weight: 500; color: var(--accent); }
+.price-sub { font-size: 12px; color: var(--hint); margin-top: 2px; }
+
+.table { width: 100%; font-size: 13px; border-collapse: collapse; }
+.table th { text-align: left; font-weight: 500; padding: 8px 10px; border-bottom: 0.5px solid var(--border); color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: .04em; }
+.table td { padding: 8px 10px; border-bottom: 0.5px solid var(--border); color: var(--text); vertical-align: top; }
+.table tr:last-child td { border-bottom: none; }
+
+.step { display: flex; gap: 12px; align-items: flex-start; padding: 10px 0; border-bottom: 0.5px solid var(--border); }
+.step:last-child { border-bottom: none; }
+.step-num { width: 24px; height: 24px; border-radius: 50%; background: var(--accent); color: #fff; font-size: 12px; font-weight: 500; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 1px; }
+.step-body .h2 { margin-bottom: 2px; }
+
+.badge { font-size: 11px; padding: 2px 8px; border-radius: 4px; font-weight: 500; }
+.badge-hot { background: #FCEBEB; color: #A32D2D; }
+.badge-ok { background: #EAF3DE; color: #3B6D11; }
+.badge-med { background: #FAEEDA; color: #854F0B; }
+
+.divider { height: 0.5px; background: var(--border); margin: 16px 0; }
+
+.li-list { list-style: none; }
+.li-list li { font-size: 13px; color: var(--muted); padding: 3px 0; padding-left: 14px; position: relative; line-height: 1.5; }
+.li-list li::before { content: "—"; position: absolute; left: 0; color: var(--hint); }
+
+.metric-row { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 16px; }
+.metric { flex: 1; min-width: 120px; background: var(--color-background-secondary); border-radius: var(--border-radius-md); padding: .75rem 1rem; }
+.metric .num { font-size: 20px; font-weight: 500; color: var(--accent); }
+.metric .lbl { font-size: 12px; color: var(--hint); margin-bottom: 2px; }
+
+.post-card { border-left: 3px solid var(--accent-mid); background: var(--color-background-secondary); border-radius: 0 var(--border-radius-md) var(--border-radius-md) 0; padding: .75rem 1rem; margin-bottom: 10px; }
+.post-card .hook { font-size: 14px; font-weight: 500; margin-bottom: 4px; }
+.post-card .body { font-size: 12px; color: var(--muted); line-height: 1.5; }
+.post-card .tag { font-size: 11px; color: var(--accent); margin-top: 6px; }
+
+.recommended-badge {
+  background: var(--accent); color: #fff; font-size: 11px; font-weight: 500;
+  padding: 3px 10px; border-radius: 999px; display: inline-block; margin-bottom: 8px;
+}
+.featured-card { border: 1.5px solid var(--accent-mid); }
+</style>
+
+<div class="shell">
+
+<div class="tabs" id="tabs">
+  <button class="tab active" onclick="show('modelo')">Modelo de negocio</button>
+  <button class="tab" onclick="show('paquetes')">Paquetes y precios</button>
+  <button class="tab" onclick="show('icpq')">ICP & prospección</button>
+  <button class="tab" onclick="show('linkedin')">LinkedIn engine</button>
+  <button class="tab" onclick="show('kpis')">Proyecciones</button>
+</div>
+
+<!-- MODELO DE NEGOCIO -->
+<div class="section visible" id="s-modelo">
+  <div class="grid2">
+    <div class="card card-accent">
+      <div class="pill pill-green">Propuesta de valor</div>
+      <div class="h2">Diagnóstico cloud ejecutable en 6 semanas</div>
+      <div class="divider"></div>
+      <ul class="li-list">
+        <li>Assessment AS-IS documentado con evidencias</li>
+        <li>Arquitectura objetivo (TO-BE) para Azure, AWS o multicloud</li>
+        <li>Roadmap priorizado por impacto × esfuerzo</li>
+        <li>MLOps, Seguridad y Firewall incluidos</li>
+        <li>Entregables ejecutivos listos para la junta directiva</li>
+      </ul>
+    </div>
+    <div class="card card-accent">
+      <div class="pill pill-blue">Diferenciadores OneTerminal</div>
+      <div class="h2">Por qué elegirte sobre una gran firma</div>
+      <div class="divider"></div>
+      <ul class="li-list">
+        <li>Precio PYME: entre 3× y 10× más accesible que Deloitte / Accenture</li>
+        <li>Arquitecto senior trabajando directamente con el cliente, sin junior en el medio</li>
+        <li>Metodología probada en banca y salud digital (casos reales)</li>
+        <li>Azure + AWS + Kubernetes en un mismo consultor certificado</li>
+        <li>Entregables propios (TaaSIA, ADLC) como activos diferenciadores</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="grid3">
+    <div class="card">
+      <div class="pill pill-purple">Segmento primario</div>
+      <div class="h2">Startups y Scale-ups</div>
+      <p class="p">10–80 empleados. Usan cloud sin gobierno formal. Dolor: costos crecen sin control, sin seguridad, sin CI/CD real.</p>
+    </div>
+    <div class="card">
+      <div class="pill pill-amber">Segmento secundario</div>
+      <div class="h2">PYME establecidas</div>
+      <p class="p">50–500 empleados, sector salud, fintech, retail, logística. Tienen TI interna pero sin arquitecto cloud senior.</p>
+    </div>
+    <div class="card">
+      <div class="pill pill-coral">Segmento terciario</div>
+      <div class="h2">Empresas en expansión</div>
+      <p class="p">Compañías medianas con proyectos regulados (ISO, SOC2) que necesitan compliance cloud antes de una auditoría.</p>
+    </div>
+  </div>
+
+  <div class="card" style="margin-bottom: 16px;">
+    <div class="h3">Canales de adquisición</div>
+    <div class="grid4" style="margin-top: 10px; margin-bottom: 0;">
+      <div style="text-align:center; padding: 8px;">
+        <div style="font-size: 20px; margin-bottom: 4px;">💼</div>
+        <div class="h2" style="font-size: 13px;">LinkedIn</div>
+        <p class="p" style="font-size: 12px;">Contenido + outreach directo a CTOs y CIOs de PYME</p>
+      </div>
+      <div style="text-align:center; padding: 8px;">
+        <div style="font-size: 20px; margin-bottom: 4px;">🌐</div>
+        <div class="h2" style="font-size: 13px;">OneTerminal.io</div>
+        <p class="p" style="font-size: 12px;">Landing con CTA de diagnóstico gratuito de 30 min</p>
+      </div>
+      <div style="text-align:center; padding: 8px;">
+        <div style="font-size: 20px; margin-bottom: 4px;">🤝</div>
+        <div class="h2" style="font-size: 13px;">Referidos</div>
+        <p class="p" style="font-size: 12px;">Red de Minsait, colegas, clientes anteriores</p>
+      </div>
+      <div style="text-align:center; padding: 8px;">
+        <div style="font-size: 20px; margin-bottom: 4px;">🎙</div>
+        <div class="h2" style="font-size: 13px;">Comunidad</div>
+        <p class="p" style="font-size: 12px;">Webinars, meetups cloud LATAM, Azure Community</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="grid2">
+    <div class="card">
+      <div class="h3">Modelo de ingresos</div>
+      <ul class="li-list" style="margin-top: 8px;">
+        <li><strong>Proyecto único:</strong> consultoría 4–8 semanas, pago 50/50</li>
+        <li><strong>Retención mensual:</strong> seguimiento post-roadmap (FinOps, alertas, gobierno)</li>
+        <li><strong>Implementación:</strong> ejecución de quick wins como proyecto adjunto</li>
+        <li><strong>Talleres:</strong> sesiones de formación para equipos técnicos del cliente</li>
+      </ul>
+    </div>
+    <div class="card">
+      <div class="h3">Recursos clave</div>
+      <ul class="li-list" style="margin-top: 8px;">
+        <li>Tu experiencia en Azure / AWS / Kubernetes / Terraform</li>
+        <li>Metodología ADLC + skill DevSecOps documentados</li>
+        <li>Plantillas AS-IS / TO-BE / Roadmap listas para reusar</li>
+        <li>1 subcontratista SRE/Performance para engagements grandes</li>
+        <li>Herramientas: Claude Code, n8n, Excalidraw, Azure DevOps</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<!-- PAQUETES Y PRECIOS -->
+<div class="section" id="s-paquetes">
+  <div class="grid3">
+    <div class="card">
+      <div class="pill pill-gray">Starter</div>
+      <div class="h2">Cloud Checkup</div>
+      <div class="price" style="margin: 8px 0;">$2.500.000</div>
+      <div class="price-sub">COP · 2 semanas · 1 consultor</div>
+      <div class="divider"></div>
+      <ul class="li-list">
+        <li>Entrevistas con equipo técnico (4h)</li>
+        <li>Revisión de arquitectura existente</li>
+        <li>Informe de hallazgos (hasta 15 ítems)</li>
+        <li>Sesión de cierre con recomendaciones</li>
+        <li>Sin modelo TO-BE detallado</li>
+      </ul>
+      <div style="margin-top: 12px;" class="p">Ideal para: startups tempranas, CTOs que quieren validar si tienen problemas reales antes de invertir.</div>
+    </div>
+
+    <div class="card featured-card">
+      <div class="recommended-badge">Más vendido</div>
+      <div class="pill pill-green">Professional</div>
+      <div class="h2">Cloud Assessment 360°</div>
+      <div class="price" style="margin: 8px 0;">$6.900.000</div>
+      <div class="price-sub">COP · 6 semanas · 2 consultores</div>
+      <div class="divider"></div>
+      <ul class="li-list">
+        <li>Todo lo del Starter +</li>
+        <li>Análisis AS-IS completo (7 dominios)</li>
+        <li>Modelo de Arquitectura Objetivo (TO-BE)</li>
+        <li>Evaluación MLOps y Seguridad/Firewall</li>
+        <li>Roadmap priorizado por impacto × esfuerzo</li>
+        <li>Presentación ejecutiva lista para junta</li>
+        <li>DevOps Score con métricas de madurez</li>
+      </ul>
+      <div style="margin-top: 12px;" class="p">Exactamente lo que ofrece la propuesta de Salva Health. Tu producto ancla.</div>
+    </div>
+
+    <div class="card">
+      <div class="pill pill-purple">Enterprise</div>
+      <div class="h2">Transformación Cloud</div>
+      <div class="price" style="margin: 8px 0;">$18.000.000+</div>
+      <div class="price-sub">COP · 12–16 semanas · equipo</div>
+      <div class="divider"></div>
+      <ul class="li-list">
+        <li>Todo lo del Professional +</li>
+        <li>Implementación de quick wins incluida</li>
+        <li>Landing Zone y gobierno multi-cuenta</li>
+        <li>CI/CD pipelines configurados</li>
+        <li>Observabilidad OTel desplegada</li>
+        <li>Formación al equipo técnico (4 talleres)</li>
+        <li>Retención de 2 meses post-entrega</li>
+      </ul>
+      <div style="margin-top: 12px;" class="p">Para empresas medianas con presupuesto de transformación aprobado.</div>
+    </div>
+  </div>
+
+  <div class="card" style="margin-bottom: 16px;">
+    <div class="h3">Add-ons vendibles por separado</div>
+    <table class="table" style="margin-top: 10px;">
+      <thead><tr><th>Add-on</th><th>Descripción</th><th>Precio orientativo</th></tr></thead>
+      <tbody>
+        <tr><td><span class="badge badge-hot">Popular</span> Retención mensual</td><td>Gobierno FinOps, alertas, revisión mensual de costos y seguridad</td><td>$1.500.000/mes</td></tr>
+        <tr><td>Taller CI/CD</td><td>Sesión de 4h con el equipo: pipelines, IaC, trunk-based dev</td><td>$800.000</td></tr>
+        <tr><td>Quick Win sprint</td><td>2 semanas de implementación de 3 mejoras críticas del roadmap</td><td>$3.500.000</td></tr>
+        <tr><td>Security audit</td><td>Penetration testing superficial + revisión Zero Trust</td><td>$2.500.000</td></tr>
+        <tr><td>FinOps baseline</td><td>Análisis de factura cloud actual + plan de reducción con cifras</td><td>$1.200.000</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="card card-accent">
+    <div class="h3">Política de descuentos</div>
+    <div class="grid3" style="margin-top: 10px; margin-bottom: 0;">
+      <div><div class="pill pill-green">10% descuento</div><p class="p">Pago 100% al inicio del proyecto</p></div>
+      <div><div class="pill pill-blue">15% descuento</div><p class="p">Referido de un cliente existente que cierra</p></div>
+      <div><div class="pill pill-amber">Gratis</div><p class="p">Sesión diagnóstico de 30 min para cualquier prospecto calificado</p></div>
+    </div>
+  </div>
+</div>
+
+<!-- ICP Y PROSPECCION -->
+<div class="section" id="s-icpq">
+  <div class="card" style="margin-bottom: 16px;">
+    <div class="h3">Perfil del cliente ideal (ICP)</div>
+    <div class="grid2" style="margin-top: 10px;">
+      <div>
+        <div class="pill pill-green">Señales de compra altas</div>
+        <ul class="li-list">
+          <li>Empresa en cloud (Azure, AWS) desde hace 1–3 años sin arquitecto dedicado</li>
+          <li>Crecimiento acelerado: factura cloud subiendo >20% mensual sin explicación</li>
+          <li>Incidente de seguridad reciente o auditoría próxima</li>
+          <li>CTO o VP Tech recién llegado que quiere hacer diagnóstico</li>
+          <li>Levantamiento de inversión o due diligence próximo</li>
+          <li>Regulación: fintech con SAGRILAFT, salud con datos sensibles, retail con PCI</li>
+        </ul>
+      </div>
+      <div>
+        <div class="pill pill-coral">Señales de descarte</div>
+        <ul class="li-list">
+          <li>Empresa sin cloud o 100% on-premise sin planes de migrar</li>
+          <li>Menos de 5 personas en equipo tech (aún no es el momento)</li>
+          <li>Presupuesto bloqueado para todo 2025–2026</li>
+          <li>Ya tienen contrato con una Big4 en curso</li>
+          <li>Cultura muy siloed: no comparten accesos ni documentación</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="card" style="margin-bottom: 16px;">
+    <div class="h3">Sectores objetivo en Colombia y LATAM</div>
+    <div class="grid4" style="margin-top: 10px; margin-bottom: 0;">
+      <div><div class="pill pill-blue">Salud digital</div><p class="p" style="font-size:12px;">Telemedicina, EHR, healthtech. Dato sensible = dolor de compliance = tu entrada.</p></div>
+      <div><div class="pill pill-green">Fintech / Banca digital</div><p class="p" style="font-size:12px;">Neobancos, wallets, lending. Regulación SFC + presión de time-to-market.</p></div>
+      <div><div class="pill pill-amber">Retail / Logística</div><p class="p" style="font-size:12px;">eCommerce creciendo rápido, costos cloud descontrolados, sin observabilidad.</p></div>
+      <div><div class="pill pill-purple">Edtech / SaaS B2B</div><p class="p" style="font-size:12px;">Productos en cloud que buscan certificaciones (ISO 27001, SOC2) para vender a enterprise.</p></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="h3">Proceso de prospección — 5 pasos</div>
+    <div class="step">
+      <div class="step-num">1</div>
+      <div class="step-body">
+        <div class="h2">Identificar en LinkedIn Sales Navigator</div>
+        <p class="p">Filtros: Colombia / LATAM · "CTO" OR "VP Technology" OR "Head of Engineering" · Empresa 20–500 empleados · Sectores priorizados. Exportar lista de 30 prospectos/semana.</p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">2</div>
+      <div class="step-body">
+        <div class="h2">Calificar con señales públicas</div>
+        <p class="p">Revisar ofertas de trabajo de la empresa (¿buscan DevOps? = pain), posts de LinkedIn del CTO (¿habla de costos, incidentes?), noticias de inversión o expansión reciente.</p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">3</div>
+      <div class="step-body">
+        <div class="h2">Primer contacto personalizado (no genérico)</div>
+        <p class="p">Mensaje corto mencionando algo específico de su empresa. Propuesta de valor en 2 líneas. CTA: llamada de 20 min para ver si aplica el diagnóstico gratuito.</p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">4</div>
+      <div class="step-body">
+        <div class="h2">Diagnóstico gratuito de 30 min (gancho)</div>
+        <p class="p">Sesión de discovery estructurada: 5 preguntas clave de madurez cloud. Al final presentas "heat map" rápido de sus 3 principales riesgos. Siembras urgencia sin presionar.</p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">5</div>
+      <div class="step-body">
+        <div class="h2">Propuesta personalizada en 48h</div>
+        <p class="p">Usa la plantilla base pero personaliza: sector del cliente, 2–3 hallazgos mencionados en el diagnóstico, precio y paquete recomendado. Validez 30 días.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- LINKEDIN ENGINE -->
+<div class="section" id="s-linkedin">
+  <div class="grid2" style="margin-bottom: 16px;">
+    <div class="card card-accent">
+      <div class="pill pill-green">Perfil LinkedIn — optimización</div>
+      <ul class="li-list" style="margin-top: 8px;">
+        <li><strong>Headline:</strong> "Cloud Architect | Ayudo a PYMEs a escalar en Azure/AWS con seguridad y sin costos desbocados | OneTerminal"</li>
+        <li><strong>About:</strong> Narrativa de problema-solución-resultado. 3 casos de éxito en 3 líneas cada uno.</li>
+        <li><strong>Featured:</strong> Enlace al diagnóstico gratuito (Calendly), un post viral, la landing de OneTerminal</li>
+        <li><strong>Experience:</strong> Minsait + OneTerminal como empresa paralela activa, no como freelance</li>
+        <li><strong>Skills:</strong> Azure, AWS, Kubernetes, Terraform, DevSecOps, FinOps, Cloud Architecture</li>
+      </ul>
+    </div>
+    <div class="card card-accent">
+      <div class="pill pill-blue">Ritmo de publicación semanal</div>
+      <table class="table" style="margin-top: 8px;">
+        <thead><tr><th>Día</th><th>Formato</th><th>Objetivo</th></tr></thead>
+        <tbody>
+          <tr><td>Lunes</td><td>Post educativo</td><td>Alcance / awareness</td></tr>
+          <tr><td>Miércoles</td><td>Caso de estudio o hallazgo</td><td>Credibilidad</td></tr>
+          <tr><td>Viernes</td><td>Opinión o tendencia</td><td>Engagement / comentarios</td></tr>
+          <tr><td>Diario</td><td>Comentar 5 posts de ICP</td><td>Visibilidad en red objetivo</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="h3" style="margin-bottom: 10px;">Ejemplos de posts que generan leads</div>
+
+  <div class="post-card">
+    <div class="hook">🚨 Tu empresa gasta en cloud sin saberlo. 5 señales de que tu arquitectura Azure está regalando dinero:</div>
+    <div class="body">→ Recursos sin tags de costo → Ambientes dev siempre encendidos → Sin alertas de budget → Sin Reserved Instances → Sin auto-scaling configurado. En una empresa de salud digital que revisé, encontramos $1.200 USD/mes de desperdicio en las primeras 2 horas de análisis. ¿Sabes cuánto estás pagando de más? [CTA: diagnóstico gratuito en los comentarios]</div>
+    <div class="tag">#FinOps #Azure #CloudCosts #DevOps</div>
+  </div>
+
+  <div class="post-card">
+    <div class="hook">El CTO me dijo "nuestra arquitectura está bien". Luego le mostré el reporte. Silencio.</div>
+    <div class="body">No es crítica, es diagnóstico. La mayoría de startups que operan en cloud más de 2 años acumulan deuda técnica invisible: sin seguridad formal, sin CI/CD real, sin observabilidad. No porque sean malos, sino porque nadie se los dijo antes. Eso es exactamente lo que hacemos en OneTerminal: te lo mostramos antes de que se convierta en un incidente.</div>
+    <div class="tag">#CloudArchitecture #DevSecOps #Startups #LATAM</div>
+  </div>
+
+  <div class="post-card">
+    <div class="hook">Checklist gratuito: ¿Tu empresa está lista para escalar en Azure? 10 preguntas que deberías poder responder.</div>
+    <div class="body">1. ¿Tienes Management Groups configurados? 2. ¿Tus secrets están en Key Vault o en variables de entorno? 3. ¿Tienes SLOs definidos para tus servicios críticos? ... [continúa]. Comenta cuántas respondiste SÍ y te digo qué significa para tu operación.</div>
+    <div class="tag">#Azure #CloudAssessment #ChecklistCloud</div>
+  </div>
+
+  <div class="card" style="margin-top: 16px;">
+    <div class="h3">Mensaje de outreach directo (plantilla)</div>
+    <div class="post-card" style="margin-top: 10px; margin-bottom: 0;">
+      <div class="body">Hola [Nombre], vi que [empresa] lleva un par de años creciendo en [sector] — impresionante tracción. Trabajo con CTOs de empresas similares haciendo assessments de arquitectura cloud (Azure/AWS) para que puedan escalar sin que los costos o la seguridad se conviertan en un freno. Ofrezco una sesión de diagnóstico gratuita de 30 min donde te muestro los 3 mayores riesgos de tu arquitectura actual, sin compromiso. ¿Tiene sentido conectarnos esta semana?</div>
+    </div>
+  </div>
+</div>
+
+<!-- PROYECCIONES -->
+<div class="section" id="s-kpis">
+  <div class="metric-row">
+    <div class="metric"><div class="lbl">Meta proyectos / año</div><div class="num">8–12</div></div>
+    <div class="metric"><div class="lbl">Ingreso mínimo (8 × $6.9M)</div><div class="num">$55M COP</div></div>
+    <div class="metric"><div class="lbl">Ingreso objetivo (mix)</div><div class="num">$90M COP</div></div>
+    <div class="metric"><div class="lbl">Tasa de cierre objetivo</div><div class="num">20–25%</div></div>
+  </div>
+
+  <div class="card" style="margin-bottom: 16px;">
+    <div class="h3">Pipeline mensual necesario</div>
+    <table class="table" style="margin-top: 10px;">
+      <thead><tr><th>Etapa</th><th>Meta mensual</th><th>Acción concreta</th></tr></thead>
+      <tbody>
+        <tr><td><span class="badge badge-ok">Awareness</span> Posts LinkedIn</td><td>3 posts / semana</td><td>Publicar lunes, miércoles, viernes</td></tr>
+        <tr><td><span class="badge badge-ok">Prospección</span> Mensajes outreach</td><td>30–40 mensajes</td><td>LinkedIn + correo personalizado</td></tr>
+        <tr><td><span class="badge badge-med">Discovery</span> Llamadas diagnóstico</td><td>6–8 sesiones</td><td>Calendly con diagnóstico gratuito</td></tr>
+        <tr><td><span class="badge badge-med">Propuesta</span> Enviadas</td><td>3–4 propuestas</td><td>Plantilla base personalizada en 48h</td></tr>
+        <tr><td><span class="badge badge-hot">Cierre</span> Proyectos ganados</td><td>1 por mes</td><td>Follow-up a los 7 días si no responde</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="grid2">
+    <div class="card">
+      <div class="h3">Primer trimestre — acciones prioritarias</div>
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-body"><div class="h2">Mes 1: Posicionamiento</div><p class="p">Optimizar perfil LinkedIn. Publicar 3 casos de éxito anonimizados. Lanzar landing OneTerminal con CTA de diagnóstico. Definir los 3 paquetes oficiales con precios.</p></div>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-body"><div class="h2">Mes 2: Prospección activa</div><p class="p">Activar outreach semanal. Invitar a 20 CTOs/VPs a conectar por semana. Primera ronda de diagnósticos gratuitos. Objetivo: 2–3 propuestas enviadas.</p></div>
+      </div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-body"><div class="h2">Mes 3: Primer cierre</div><p class="p">Cerrar primer proyecto Professional ($6.9M). Documentar el caso como estudio. Iniciar retención mensual del mismo cliente para ingresos recurrentes.</p></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="h3">KPIs de seguimiento</div>
+      <table class="table" style="margin-top: 10px;">
+        <thead><tr><th>KPI</th><th>Meta mensual</th></tr></thead>
+        <tbody>
+          <tr><td>Seguidores LinkedIn ganados</td><td>+150–200</td></tr>
+          <tr><td>Impressions de posts</td><td>>5.000</td></tr>
+          <tr><td>Mensajes de outreach enviados</td><td>40</td></tr>
+          <tr><td>Tasa de respuesta outreach</td><td>>15%</td></tr>
+          <tr><td>Diagnósticos gratuitos realizados</td><td>6</td></tr>
+          <tr><td>Propuestas enviadas</td><td>3</td></tr>
+          <tr><td>Tasa de cierre propuestas</td><td>>25%</td></tr>
+          <tr><td>Ingreso facturado</td><td>$6.9M+ desde mes 3</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+</div>
+
+<script>
+function show(id) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('visible'));
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('s-' + id).classList.add('visible');
+  event.target.classList.add('active');
+}
+</script>

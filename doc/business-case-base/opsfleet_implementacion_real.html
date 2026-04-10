@@ -1,0 +1,494 @@
+
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: var(--font-sans); color: var(--color-text-primary); }
+.w { padding: 1rem 0; max-width: 880px; }
+.tabs { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 1.5rem; }
+.tab { padding: 7px 15px; border-radius: 999px; border: 0.5px solid var(--color-border-secondary); font-size: 13px; cursor: pointer; background: transparent; color: var(--color-text-secondary); font-family: var(--font-sans); transition: all .15s; }
+.tab.on { background: #0F6E56; color: #fff; border-color: transparent; font-weight: 500; }
+.tab:hover:not(.on) { background: var(--color-background-secondary); }
+.sec { display: none; }
+.sec.v { display: block; }
+.card { background: var(--color-background-primary); border: 0.5px solid var(--color-border-tertiary); border-radius: var(--border-radius-lg); padding: 1rem 1.25rem; margin-bottom: 12px; }
+.card-l { border-left: 3px solid #1D9E75; border-radius: 0 var(--border-radius-lg) var(--border-radius-lg) 0; }
+.card-r { border-left: 3px solid #E24B4A; border-radius: 0 var(--border-radius-lg) var(--border-radius-lg) 0; }
+.card-b { border-left: 3px solid #378ADD; border-radius: 0 var(--border-radius-lg) var(--border-radius-lg) 0; }
+.card-a { border-left: 3px solid #EF9F27; border-radius: 0 var(--border-radius-lg) var(--border-radius-lg) 0; }
+.g2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 12px; margin-bottom: 12px; }
+.g3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin-bottom: 12px; }
+.h3 { font-size: 11px; font-weight: 500; color: var(--color-text-secondary); margin-bottom: 8px; text-transform: uppercase; letter-spacing: .05em; }
+.h2 { font-size: 14px; font-weight: 500; margin-bottom: 5px; }
+.p { font-size: 13px; line-height: 1.6; color: var(--color-text-secondary); }
+.ul { list-style: none; }
+.ul li { font-size: 13px; color: var(--color-text-secondary); padding: 4px 0 4px 14px; position: relative; line-height: 1.5; border-bottom: 0.5px solid var(--color-border-tertiary); }
+.ul li:last-child { border-bottom: none; }
+.ul li::before { content: "›"; position: absolute; left: 0; color: var(--color-text-tertiary); font-weight: 700; }
+.div { height: 0.5px; background: var(--color-border-tertiary); margin: 10px 0; }
+.pill { display: inline-block; padding: 2px 9px; border-radius: 999px; font-size: 11px; font-weight: 500; margin-bottom: 6px; }
+.pg { background: #E1F5EE; color: #085041; }
+.pr { background: #FCEBEB; color: #791F1F; }
+.pb { background: #E6F1FB; color: #0C447C; }
+.pa { background: #FAEEDA; color: #633806; }
+.pp { background: #EEEDFE; color: #3C3489; }
+.pgr { background: #F1EFE8; color: #444441; }
+.mono { font-family: var(--font-mono); font-size: 11px; background: var(--color-background-secondary); padding: 2px 6px; border-radius: 4px; color: var(--color-text-secondary); display: inline-block; }
+.code-block { font-family: var(--font-mono); font-size: 11px; background: var(--color-background-secondary); padding: .75rem 1rem; border-radius: var(--border-radius-md); color: var(--color-text-secondary); line-height: 1.7; margin: 8px 0; white-space: pre-wrap; }
+.step { display: flex; gap: 12px; align-items: flex-start; padding: 10px 0; border-bottom: 0.5px solid var(--color-border-tertiary); }
+.step:last-child { border-bottom: none; }
+.snum { width: 24px; height: 24px; border-radius: 50%; background: #0F6E56; color: #fff; font-size: 12px; font-weight: 500; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 2px; }
+.met-row { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 12px; }
+.met { flex: 1; min-width: 100px; background: var(--color-background-secondary); border-radius: var(--border-radius-md); padding: .65rem .9rem; }
+.met .n { font-size: 18px; font-weight: 500; color: #0F6E56; }
+.met .l { font-size: 11px; color: var(--color-text-tertiary); margin-bottom: 2px; }
+.warn { background: #FAEEDA; border-radius: var(--border-radius-md); padding: .75rem 1rem; margin-bottom: 10px; }
+.wt { font-size: 12px; font-weight: 500; color: #633806; margin-bottom: 3px; }
+.wd { font-size: 12px; color: #854F0B; line-height: 1.5; }
+.ok { background: #E1F5EE; border-radius: var(--border-radius-md); padding: .75rem 1rem; margin-bottom: 10px; }
+.ot { font-size: 12px; font-weight: 500; color: #085041; margin-bottom: 3px; }
+.od { font-size: 12px; color: #0F6E56; line-height: 1.5; }
+.tbl { width: 100%; font-size: 12px; border-collapse: collapse; }
+.tbl th { text-align: left; font-weight: 500; padding: 7px 8px; border-bottom: 0.5px solid var(--color-border-tertiary); color: var(--color-text-secondary); font-size: 11px; text-transform: uppercase; letter-spacing: .04em; }
+.tbl td { padding: 7px 8px; border-bottom: 0.5px solid var(--color-border-tertiary); color: var(--color-text-primary); vertical-align: top; }
+.tbl tr:last-child td { border-bottom: none; }
+
+.mockup { background: var(--color-background-secondary); border-radius: var(--border-radius-lg); padding: 1.25rem; margin-bottom: 12px; }
+.mock-header { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; padding-bottom: 10px; border-bottom: 0.5px solid var(--color-border-tertiary); }
+.mock-logo { width: 28px; height: 28px; border-radius: 6px; background: #0F6E56; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 12px; font-weight: 700; }
+.mock-title { font-size: 14px; font-weight: 500; }
+.mock-sub { font-size: 11px; color: var(--color-text-secondary); }
+.agent-row { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-bottom: 0.5px solid var(--color-border-tertiary); }
+.agent-row:last-child { border-bottom: none; }
+.agent-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+.agent-name { font-size: 13px; font-weight: 500; flex: 1; }
+.agent-status { font-size: 11px; color: var(--color-text-secondary); }
+.agent-cost { font-size: 12px; color: #0F6E56; font-weight: 500; min-width: 70px; text-align: right; }
+.stat-row { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; }
+.stat { flex: 1; min-width: 80px; background: var(--color-background-primary); border-radius: var(--border-radius-md); padding: .6rem .8rem; border: 0.5px solid var(--color-border-tertiary); }
+.stat .sn { font-size: 17px; font-weight: 500; }
+.stat .sl { font-size: 11px; color: var(--color-text-tertiary); }
+.finding { background: var(--color-background-primary); border-radius: var(--border-radius-md); padding: .6rem .9rem; margin-bottom: 6px; border-left: 3px solid; }
+.finding .ft { font-size: 12px; font-weight: 500; }
+.finding .fd { font-size: 11px; color: var(--color-text-secondary); margin-top: 2px; }
+</style>
+
+<div class="w">
+<div class="tabs">
+  <button class="tab on" onclick="show('como',this)">Como funciona real</button>
+  <button class="tab" onclick="show('tiempo',this)">Tiempo y budget</button>
+  <button class="tab" onclick="show('skill',this)">Skills y prompt</button>
+  <button class="tab" onclick="show('custom',this)">Customizacion</button>
+  <button class="tab" onclick="show('vista',this)">Vista del cliente</button>
+  <button class="tab" onclick="show('honesto',this)">Limitaciones reales</button>
+</div>
+
+<!-- COMO FUNCIONA REAL -->
+<div class="sec v" id="s-como">
+  <div class="ok">
+    <div class="ot">Respuesta directa: no necesitas modificar el codigo de Paperclip</div>
+    <div class="od">Todo lo que necesitas — adapters, skills, heartbeats, budgets, org chart — esta disponible en la API y UI de Paperclip out-of-the-box. Tu trabajo es configurar, no programar el framework.</div>
+  </div>
+
+  <div class="card" style="margin-bottom:12px;">
+    <div class="h3">Como se implementa cada agente — paso a paso real</div>
+    <div class="step">
+      <div class="snum">1</div>
+      <div>
+        <div class="h2">Crear la empresa en Paperclip</div>
+        <p class="p">Via UI o CLI: nombre "OpsFleet - Cliente X", goal "Mantener la infraestructura cloud de ClienteX operando con seguridad y costo optimo". Esto es el contexto que todos los agentes ven.</p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="snum">2</div>
+      <div>
+        <div class="h2">Crear cada agente con adapter claude_local</div>
+        <p class="p">En la UI de Paperclip: "Add Agent". Tipo: <span class="mono">claude_local</span>. Working directory: <span class="mono">/home/opsfleet/agents/finops</span>. Budget mensual: $30 USD. El adapter corre Claude Code CLI localmente cuando Paperclip dispara el heartbeat.</p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="snum">3</div>
+      <div>
+        <div class="h2">Configurar el promptTemplate del agente</div>
+        <p class="p">Este es el "sistema prompt" del agente. Aqui le dices quien es, que herramientas tiene (MCP servers) y como debe comportarse. Ejemplo para FinOps Agent:</p>
+        <div class="code-block">Eres el FinOps Agent de OpsFleet para {{company.name}}.
+Tu objetivo: analizar costos AWS y Azure, detectar anomalias y
+generar reportes accionables.
+
+Herramientas disponibles (MCP servers activos):
+- awslabs.aws-api-mcp-server: consulta Cost Explorer, Compute
+  Optimizer, Budgets API
+- awslabs.aws-knowledge-mcp-server: best practices FinOps
+
+Credenciales: usa AWS_PROFILE=finops-readonly (least privilege)
+
+Al terminar cada analisis: crea un issue con tus hallazgos y
+asignalo al CEO Agent para revision ejecutiva.</div>
+      </div>
+    </div>
+    <div class="step">
+      <div class="snum">4</div>
+      <div>
+        <div class="h2">Configurar variables de entorno del agente</div>
+        <p class="p">En el campo <span class="mono">env</span> del adapter config: <span class="mono">AWS_PROFILE=finops-agent</span>, <span class="mono">AWS_REGION=us-east-1</span>, <span class="mono">FASTMCP_LOG_LEVEL=ERROR</span>. Paperclip guarda estos valores encriptados. Cada agente tiene sus propias credenciales IAM.</p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="snum">5</div>
+      <div>
+        <div class="h2">Configurar el heartbeat schedule</div>
+        <p class="p">En la UI de Paperclip: schedule tipo cron. FinOps: <span class="mono">0 */8 * * *</span> (cada 8h). Security: <span class="mono">0 */12 * * *</span>. Infra: <span class="mono">0 */4 * * *</span>. CEO Agent: <span class="mono">0 8 * * *</span> (diario a las 8am). Paperclip despierta al agente, el agente corre, termina, duerme.</p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="snum">6</div>
+      <div>
+        <div class="h2">Como se comunican los agentes entre si</div>
+        <p class="p">Via el sistema de issues y comments de Paperclip. El FinOps Agent crea un issue: "Anomalia de costo detectada: EC2 t3.large x8 idle en dev". Lo asigna al CEO Agent. El CEO Agent, en su siguiente heartbeat, lo lee, lo procesa y crea un resumen ejecutivo. No hay comunicacion directa entre agentes — todo pasa por el sistema de tickets de Paperclip.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="h3">Flujo completo de un heartbeat del FinOps Agent</div>
+    <div class="code-block">08:00 — Paperclip dispara heartbeat
+  Claude Code CLI arranca en /home/opsfleet/agents/finops
+  Lee promptTemplate + SKILL.md de finops
+  
+  GET /api/agents/me  → obtiene identidad, budget, cadena
+  GET /api/issues?assignee=finops-agent  → revisa inbox
+  
+  uvx awslabs.aws-api-mcp-server@latest
+  → ce:GetCostAndUsage (org-wide, ultimos 7 dias)
+  → ce:GetAnomalyDetectors
+  → compute-optimizer:GetEC2InstanceRecommendations
+  
+  Detecta: 3 anomalias, 8 instancias idle, 2 RI por expirar
+  
+  POST /api/issues  → crea issue "Reporte FinOps semana 14"
+  POST /api/issues/{id}/comments  → agrega hallazgos detallados
+  PATCH /api/issues/{id}/assignee → asigna a CEO Agent
+  
+  Claude Code CLI termina
+08:12 — Heartbeat completado (12 minutos, ~$0.80 USD de tokens)</div>
+  </div>
+</div>
+
+<!-- TIEMPO Y BUDGET -->
+<div class="sec" id="s-tiempo">
+  <div class="card" style="margin-bottom:12px;">
+    <div class="h3">Cuanto tiempo trabaja cada agente a la semana</div>
+    <table class="tbl">
+      <thead><tr><th>Agente</th><th>Frecuencia</th><th>Duracion estimada / run</th><th>Runs / semana</th><th>Horas activas / semana</th></tr></thead>
+      <tbody>
+        <tr><td><span class="pill pg">FinOps</span></td><td>Cada 8h</td><td>10-15 min</td><td>21 runs</td><td>~3.5h activo</td></tr>
+        <tr><td><span class="pill pr">Security</span></td><td>Cada 12h</td><td>12-20 min</td><td>14 runs</td><td>~3h activo</td></tr>
+        <tr><td><span class="pill pb">Infra Ops</span></td><td>Cada 4h</td><td>8-12 min</td><td>42 runs</td><td>~7h activo</td></tr>
+        <tr><td><span class="pill pp">CEO Agent</span></td><td>Diario</td><td>15-25 min</td><td>7 runs</td><td>~2h activo</td></tr>
+        <tr><td><span class="pill pgr">Knowledge</span></td><td>On-demand</td><td>5-15 min</td><td>Variable (5-20)</td><td>~1-3h activo</td></tr>
+        <tr><td><span class="pill pa">CI/CD</span></td><td>Cada 6h</td><td>8-15 min</td><td>28 runs</td><td>~4h activo</td></tr>
+      </tbody>
+    </table>
+    <p class="p" style="margin-top:8px;font-size:12px;">El resto del tiempo los agentes estan DORMIDOS. No consumen tokens, no consumen CPU significativa. Solo Paperclip corre (es un proceso Node.js ligero).</p>
+  </div>
+
+  <div class="card" style="margin-bottom:12px;">
+    <div class="h3">Calculo real de budget mensual por agente</div>
+    <div class="warn">
+      <div class="wt">Como funciona el budget en Paperclip</div>
+      <div class="wd">El budget es en centavos de USD por mes. Paperclip trackea el gasto de tokens por run via el adapter. Al llegar al 100% el agente se pausa automaticamente. Puedes ver burn rate y proyeccion en el dashboard.</div>
+    </div>
+    <table class="tbl">
+      <thead><tr><th>Agente</th><th>Tokens / run (est.)</th><th>Costo / run Claude Sonnet</th><th>Runs / mes</th><th>Costo total / mes</th><th>Budget recomendado</th></tr></thead>
+      <tbody>
+        <tr><td>FinOps</td><td>~15K tokens</td><td>~$0.75</td><td>90</td><td>~$67</td><td>$80 USD</td></tr>
+        <tr><td>Security</td><td>~18K tokens</td><td>~$0.90</td><td>60</td><td>~$54</td><td>$70 USD</td></tr>
+        <tr><td>Infra Ops</td><td>~12K tokens</td><td>~$0.60</td><td>180</td><td>~$108</td><td>$130 USD</td></tr>
+        <tr><td>CEO Agent</td><td>~20K tokens</td><td>~$1.00</td><td>30</td><td>~$30</td><td>$50 USD</td></tr>
+        <tr><td>Knowledge</td><td>~10K tokens</td><td>~$0.50</td><td>~60</td><td>~$30</td><td>$40 USD</td></tr>
+        <tr><td>CI/CD</td><td>~10K tokens</td><td>~$0.50</td><td>120</td><td>~$60</td><td>$75 USD</td></tr>
+        <tr><td style="font-weight:500;">TOTAL</td><td></td><td></td><td></td><td style="font-weight:500;color:#0F6E56;">~$349 USD/mes</td><td style="font-weight:500;color:#0F6E56;">~$445 USD</td></tr>
+      </tbody>
+    </table>
+    <p class="p" style="margin-top:8px;font-size:12px;">Estos son estimados con Claude Sonnet 4.6. Con claude-haiku-4-5 el costo baja ~80% pero la calidad del analisis es menor. El budget recomendado tiene un 25% de margen de seguridad antes del hard stop.</p>
+  </div>
+
+  <div class="g2">
+    <div class="card">
+      <div class="h3">Costo de infraestructura adicional</div>
+      <ul class="ul">
+        <li>VPS para Paperclip: EC2 t3.small (~$16 USD/mes) o equivalente Azure</li>
+        <li>Paperclip en si: open source MIT, $0 de licencia</li>
+        <li>awslabs MCP servers: open source, $0 de licencia</li>
+        <li>AWS APIs consumidas: paga el cliente (van contra su cuenta)</li>
+        <li>Almacenamiento de logs Paperclip: incluido en el VPS</li>
+      </ul>
+    </div>
+    <div class="card">
+      <div class="h3">Resumen economico para OpsFleet</div>
+      <ul class="ul">
+        <li>Tokens Claude: ~$350-450 USD/mes por cliente</li>
+        <li>Infraestructura: ~$16-25 USD/mes por cliente</li>
+        <li>Tu tiempo de supervision: ~4h/mes por cliente</li>
+        <li>Total costo real: ~$400-500 USD/mes por cliente</li>
+        <li>Precio al cliente plan Professional: $5.5M COP (~$1.300 USD)</li>
+        <li>Margen bruto: ~60-65%</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<!-- SKILLS Y PROMPT -->
+<div class="sec" id="s-skill">
+  <div class="card" style="margin-bottom:12px;">
+    <div class="h3">Como funciona un Skill en Paperclip (documentacion real)</div>
+    <p class="p" style="margin-bottom:10px;">Un Skill es un archivo SKILL.md con frontmatter YAML. El agente lee el nombre y descripcion primero — si lo considera relevante para su tarea actual, carga el contenido completo. Esto mantiene el prompt base pequeno.</p>
+    <div class="code-block">skills/
+└── finops-aws/
+    ├── SKILL.md          ← instrucciones del agente
+    └── references/
+        ├── cost-thresholds.md    ← umbrales por servicio
+        ├── anomaly-rules.md      ← reglas de deteccion
+        └── report-template.md   ← formato del reporte</div>
+  </div>
+
+  <div class="card" style="margin-bottom:12px;">
+    <div class="h3">Ejemplo real de SKILL.md para el FinOps Agent de OpsFleet</div>
+    <div class="code-block">---
+name: finops-aws-onetreminal
+description: >
+  Analisis de costos AWS multi-cuenta para clientes OpsFleet.
+  Usa cuando el agente tenga que revisar costos, detectar anomalias,
+  evaluar rightsizing o generar reportes FinOps.
+  No usar para incidentes de seguridad ni salud de infra.
+---
+
+# FinOps AWS — OpsFleet Skill
+
+## Herramientas disponibles
+- awslabs.aws-api-mcp-server: Cost Explorer, Budgets,
+  Compute Optimizer
+- awslabs.aws-knowledge-mcp-server: best practices FinOps
+
+## Protocolo de analisis (en orden)
+1. Cost Explorer org-wide: ultimos 7 dias vs semana anterior
+2. Detectar servicios con variacion > 20%
+3. EC2 idle: CPU < 5% por mas de 72h
+4. RI/Savings Plans: expiracion en < 30 dias
+5. Recursos sin tags obligatorios (proyecto, ambiente)
+
+## Formato del reporte en el issue
+### Resumen ejecutivo (maximo 3 lineas para el CTO)
+### Hallazgos criticos (requieren accion esta semana)
+### Oportunidades de ahorro (con $ estimado)
+### Sin novedad (lista breve)
+
+## Umbrales de alerta
+Ver references/cost-thresholds.md para valores por cliente</div>
+  </div>
+
+  <div class="ok">
+    <div class="ot">El SKILL.md es tu IP como OneTerminal</div>
+    <div class="od">El framework (Paperclip + awslabs/mcp) es open source. Pero el SKILL.md que defines para cada agente — con los protocolos, umbrales, formatos y reglas especificas — ese es tu conocimiento acumulado como consultor. Es lo que hace que OpsFleet sea mejor que un cliente que instale Paperclip por su cuenta.</div>
+  </div>
+</div>
+
+<!-- CUSTOMIZACION -->
+<div class="sec" id="s-custom">
+  <div class="g2" style="margin-bottom:12px;">
+    <div class="card card-l">
+      <div class="pill pg">Sin tocar el codigo de Paperclip</div>
+      <div class="h2">Lo que puedes customizar via config</div>
+      <ul class="ul">
+        <li>Logo y nombre de empresa en la UI (Paperclip usa Next.js — variables de entorno)</li>
+        <li>Colores del dashboard via CSS variables del tema</li>
+        <li>promptTemplate completo de cada agente</li>
+        <li>SKILL.md de cada agente — 100% tuyo</li>
+        <li>Frecuencia de heartbeats</li>
+        <li>Budgets y alertas</li>
+        <li>Org chart completo</li>
+        <li>Variables de entorno por agente (credenciales IAM)</li>
+      </ul>
+    </div>
+    <div class="card card-r">
+      <div class="pill pr">Requiere fork del codigo</div>
+      <div class="h2">Lo que necesita modificacion de codigo</div>
+      <ul class="ul">
+        <li>Reemplazar el logo de Paperclip por el de OneTerminal en el header</li>
+        <li>Dominio propio (opsfleet.onetreminal.co) en lugar del subdominio por defecto</li>
+        <li>Dashboard adicional con metricas OpsFleet propias</li>
+        <li>Email de reportes automaticos con branding OneTerminal</li>
+        <li>Integracion con Slack/Teams del cliente para notificaciones</li>
+        <li>Adapter custom si necesitas un runtime que no existe</li>
+      </ul>
+      <p class="p" style="margin-top:8px;font-size:12px;">Paperclip es MIT — puedes forkearlo. Es Next.js + Node.js. Un dia de trabajo para rebranding basico.</p>
+    </div>
+  </div>
+
+  <div class="card" style="margin-bottom:12px;">
+    <div class="h3">Estrategia de branding recomendada para OpsFleet v1</div>
+    <div class="step">
+      <div class="snum">1</div>
+      <div><div class="h2">Fase 1 (primeros 3 clientes): Paperclip sin modificar</div><p class="p">El cliente ve Paperclip con tu nombre de empresa configurado. No es ideal para branding pero es suficiente para validar el producto. Ahorras el tiempo de desarrollo de fork.</p></div>
+    </div>
+    <div class="step">
+      <div class="snum">2</div>
+      <div><div class="h2">Fase 2 (con 5+ clientes): fork ligero con branding OneTerminal</div><p class="p">Reemplaza logo, colores verde/negro OneTerminal, dominio propio. 1-2 dias de trabajo. Desde este punto el cliente ve "OpsFleet by OneTerminal" — no "Paperclip".</p></div>
+    </div>
+    <div class="step">
+      <div class="snum">3</div>
+      <div><div class="h2">Fase 3 (con 10+ clientes): dashboard propio complementario</div><p class="p">Construyes un portal OpsFleet simplificado para el cliente (React + tu API) que consume la API de Paperclip. El cliente ve solo lo que necesita ver — no toda la configuracion interna del agente.</p></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="h3">Colores OneTerminal aplicados a Paperclip (variables CSS)</div>
+    <div class="code-block"># .env de Paperclip
+NEXT_PUBLIC_APP_NAME="OpsFleet"
+NEXT_PUBLIC_COMPANY_NAME="OneTerminal"
+NEXT_PUBLIC_PRIMARY_COLOR="#0F6E56"      # verde OneTerminal
+NEXT_PUBLIC_SECONDARY_COLOR="#000000"   # negro OneTerminal
+NEXT_PUBLIC_LOGO_URL="/assets/onetreminal-logo.svg"
+NEXT_PUBLIC_FAVICON_URL="/assets/favicon.ico"
+
+# Dominio en nginx/caddy
+opsfleet.onetreminal.co → localhost:3000</div>
+  </div>
+</div>
+
+<!-- VISTA DEL CLIENTE -->
+<div class="sec" id="s-vista">
+  <p class="p" style="margin-bottom:14px;">Esta es la vista que el CTO-cliente tendria en el dashboard de Paperclip (con branding OpsFleet). El cliente ve el estado de sus agentes, el gasto, los hallazgos y puede aprobar o pausar.</p>
+
+  <div class="mockup">
+    <div class="mock-header">
+      <div class="mock-logo">OT</div>
+      <div>
+        <div class="mock-title">OpsFleet — Banco Ejemplo S.A.</div>
+        <div class="mock-sub">Dashboard · Semana del 31 mar 2026</div>
+      </div>
+    </div>
+
+    <div class="stat-row">
+      <div class="stat"><div class="sl">Agentes activos</div><div class="sn">6/6</div></div>
+      <div class="stat"><div class="sl">Tareas esta semana</div><div class="sn">47</div></div>
+      <div class="stat"><div class="sl">Gasto tokens</div><div class="sn" style="color:#0F6E56;">$312</div></div>
+      <div class="stat"><div class="sl">Budget restante</div><div class="sn">$133</div></div>
+      <div class="stat"><div class="sl">Ahorro detectado</div><div class="sn" style="color:#0F6E56;">$4.2K</div></div>
+    </div>
+
+    <div class="h3" style="margin-bottom:8px;">Estado de agentes</div>
+    <div class="agent-row">
+      <div class="agent-dot" style="background:#22c55e;"></div>
+      <div class="agent-name">CEO Agent</div>
+      <div class="agent-status">Ultimo run: hace 2h · Reporte semanal generado</div>
+      <div class="agent-cost">$28/mes</div>
+    </div>
+    <div class="agent-row">
+      <div class="agent-dot" style="background:#22c55e;"></div>
+      <div class="agent-name">FinOps Agent</div>
+      <div class="agent-status">Ultimo run: hace 6h · 3 anomalias detectadas</div>
+      <div class="agent-cost">$71/mes</div>
+    </div>
+    <div class="agent-row">
+      <div class="agent-dot" style="background:#f59e0b;"></div>
+      <div class="agent-name">Security Agent</div>
+      <div class="agent-status">En progreso · Analizando IAM policies...</div>
+      <div class="agent-cost">$52/mes</div>
+    </div>
+    <div class="agent-row">
+      <div class="agent-dot" style="background:#22c55e;"></div>
+      <div class="agent-name">Infra Ops Agent</div>
+      <div class="agent-status">Ultimo run: hace 3h · Todo OK</div>
+      <div class="agent-cost">$98/mes</div>
+    </div>
+    <div class="agent-row">
+      <div class="agent-dot" style="background:#888;"></div>
+      <div class="agent-name">Knowledge Agent</div>
+      <div class="agent-status">Idle · Esperando tickets</div>
+      <div class="agent-cost">$18/mes</div>
+    </div>
+    <div class="agent-row">
+      <div class="agent-dot" style="background:#22c55e;"></div>
+      <div class="agent-name">CI/CD Agent</div>
+      <div class="agent-status">Ultimo run: hace 5h · 2 pipelines con degradacion</div>
+      <div class="agent-cost">$45/mes</div>
+    </div>
+
+    <div class="div"></div>
+    <div class="h3" style="margin-bottom:8px;">Hallazgos pendientes de revision (requieren tu aprobacion)</div>
+    <div class="finding" style="border-color:#E24B4A;">
+      <div class="ft" style="color:#791F1F;">CRITICO — Security Agent</div>
+      <div class="fd">IAM user "deploy-legacy" con AdministratorAccess activo. Sin uso en 47 dias. Recomendacion: revocar acceso.</div>
+    </div>
+    <div class="finding" style="border-color:#EF9F27;">
+      <div class="ft" style="color:#633806;">IMPORTANTE — FinOps Agent</div>
+      <div class="fd">3 Reserved Instances RDS expiran en 18 dias. Renovacion recomendada: ahorro proyectado $890 USD/mes vs on-demand.</div>
+    </div>
+    <div class="finding" style="border-color:#378ADD;">
+      <div class="ft" style="color:#0C447C;">INFORMATIVO — CI/CD Agent</div>
+      <div class="fd">Pipeline "api-payments" aumento su duracion de 8min a 23min. Step sospechoso: integration-tests.</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="h3">Lo que el cliente PUEDE hacer desde esta vista</div>
+    <ul class="ul">
+      <li>Ver estado de cada agente en tiempo real (activo, idle, corriendo, error)</li>
+      <li>Leer los hallazgos y comentarios de cada agente en su issue</li>
+      <li>Aprobar o rechazar acciones que el agente escalo al board</li>
+      <li>Pausar un agente si considera que esta haciendo algo incorrecto</li>
+      <li>Ver el historial completo de lo que hizo cada agente (audit log)</li>
+      <li>Ver el gasto de tokens y burn rate vs budget</li>
+      <li>Crear un ticket manual para que el Knowledge Agent responda una pregunta</li>
+    </ul>
+  </div>
+</div>
+
+<!-- LIMITACIONES REALES -->
+<div class="sec" id="s-honesto">
+  <div class="warn" style="margin-bottom:12px;">
+    <div class="wt">Limitacion 1 — Paperclip NO corre los agentes en la nube</div>
+    <div class="wd">El adapter claude_local corre Claude Code CLI en el MISMO servidor donde esta Paperclip. No es un sistema distribuido — todos los agentes corren en el mismo VPS. Si el servidor cae, todos los agentes se detienen. Para alta disponibilidad necesitas un VPS con uptime garantizado o un servicio gestionado.</div>
+  </div>
+  <div class="warn" style="margin-bottom:12px;">
+    <div class="wt">Limitacion 2 — La comunicacion entre agentes es asincrona por design</div>
+    <div class="wd">Los agentes NO se hablan en tiempo real. La comunicacion es via issues y comments en Paperclip. Si el FinOps Agent crea un hallazgo a las 8am, el CEO Agent no lo procesa hasta su proximo heartbeat (8am del dia siguiente si es diario). Para casos urgentes necesitas configurar heartbeats mas frecuentes o disparos manuales.</div>
+  </div>
+  <div class="warn" style="margin-bottom:12px;">
+    <div class="wt">Limitacion 3 — El adapter HTTP existe pero requiere que el agente tenga un endpoint</div>
+    <div class="wd">Si quieres integrar notificaciones a Slack o email desde Paperclip, necesitas construir un webhook receiver o usar el adapter HTTP hacia un servicio externo. No viene integrado out-of-the-box.</div>
+  </div>
+  <div class="warn" style="margin-bottom:12px;">
+    <div class="wt">Limitacion 4 — El branding es de Paperclip por defecto</div>
+    <div class="wd">El cliente vera la UI de Paperclip, no una UI con colores OneTerminal, a menos que hagas el fork. Para los primeros clientes esto es aceptable si se explica bien. Para venta enterprise es un bloqueador que requiere el fork.</div>
+  </div>
+  <div class="ok" style="margin-bottom:12px;">
+    <div class="ot">Lo que SI funciona out-of-the-box sin ningun codigo adicional</div>
+    <div class="od">Crear empresa, agentes, org chart, skills, heartbeats, budgets, audit log, aprobaciones del board, sistema de issues y comments entre agentes, tracking de costo por agente, pause/resume de agentes, multi-empresa en un Paperclip. Todo esto via UI o API sin escribir una linea de codigo del framework.</div>
+  </div>
+  <div class="card">
+    <div class="h3">Evaluacion honesta: cuanto tarda implementar OpsFleet para el primer cliente</div>
+    <table class="tbl">
+      <thead><tr><th>Actividad</th><th>Tiempo estimado</th><th>Una sola vez o repetible</th></tr></thead>
+      <tbody>
+        <tr><td>Instalar Paperclip en VPS</td><td>2-4h</td><td>Una vez por VPS</td></tr>
+        <tr><td>Escribir SKILL.md de los 6 agentes</td><td>8-12h</td><td>Una vez (luego reutilizas)</td></tr>
+        <tr><td>Configurar IAM roles por agente</td><td>3-5h</td><td>Plantilla reutilizable</td></tr>
+        <tr><td>Crear empresa y agentes en Paperclip UI</td><td>2-3h</td><td>2-3h por cliente nuevo</td></tr>
+        <tr><td>Ajustar SKILL.md con contexto del cliente</td><td>3-4h</td><td>3-4h por cliente nuevo</td></tr>
+        <tr><td>Prueba y ajuste de heartbeats</td><td>4-6h</td><td>2h por cliente nuevo</td></tr>
+        <tr><td>Entrega y capacitacion al CTO-cliente</td><td>2h</td><td>2h por cliente nuevo</td></tr>
+        <tr><td style="font-weight:500;">Total primer cliente</td><td style="font-weight:500;color:#0F6E56;">24-36h</td><td style="font-weight:500;">~10h para clientes siguientes</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+</div>
+<script>
+function show(id, btn) {
+  document.querySelectorAll('.sec').forEach(s => s.classList.remove('v'));
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('on'));
+  document.getElementById('s-' + id).classList.add('v');
+  btn.classList.add('on');
+}
+</script>

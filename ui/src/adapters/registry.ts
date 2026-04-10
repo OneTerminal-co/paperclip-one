@@ -7,6 +7,8 @@ import { openCodeLocalUIAdapter } from "./opencode-local";
 import { piLocalUIAdapter } from "./pi-local";
 import { openClawGatewayUIAdapter } from "./openclaw-gateway";
 import { hermesLocalUIAdapter } from "./hermes-local";
+import { ollamaLocalUIAdapter } from "./ollama-local";
+import { bedrockGatewayUIAdapter } from "./bedrock-gateway";
 import { processUIAdapter } from "./process";
 import { httpUIAdapter } from "./http";
 import { loadDynamicParser, invalidateDynamicParser } from "./dynamic-loader";
@@ -55,6 +57,8 @@ function registerBuiltInUIAdapters() {
     piLocalUIAdapter,
     cursorLocalUIAdapter,
     openClawGatewayUIAdapter,
+    ollamaLocalUIAdapter,
+    bedrockGatewayUIAdapter,
     processUIAdapter,
     httpUIAdapter,
   ]) {
