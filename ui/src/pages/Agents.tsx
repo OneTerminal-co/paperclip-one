@@ -17,7 +17,10 @@ import { relativeTime, cn, agentRouteRef, agentUrl } from "../lib/utils";
 import { PageTabBar } from "../components/PageTabBar";
 import { Tabs } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
-import { Bot, Plus, List, GitBranch, SlidersHorizontal } from "lucide-react";
+import { Bot, Plus, List, GitBranch, SlidersHorizontal, Trash } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { useMutation } from "@tanstack/react-query";
+import { useState as useReactState } from "react";
 import { AGENT_ROLE_LABELS, type Agent } from "@paperclipai/shared";
 
 import { getAdapterLabel } from "../adapters/adapter-display-registry";
@@ -54,6 +57,22 @@ function filterOrgTree(nodes: OrgNode[], tab: FilterTab, showTerminated: boolean
 }
 
 export function Agents() {
+    // Modal state for agent deletion
+    const [deleteModalOpen, setDeleteModalOpen] = useReactState(false);
+    const [agentToDelete, setAgentToDelete] = useReactState<Agent | null>(null);
+    const [confirmName, setConfirmName] = useReactState("");
+
+    const deleteAgentMutation = useMutation({
+      mutationFn: async (agent: Agent) => {
+        await agentsApi.remove(agent.id, selectedCompanyId);
+      },
+      onSuccess: () => {
+        setDeleteModalOpen(false);
+        setAgentToDelete(null);
+        setConfirmName("");
+        // Optionally refetch agents list here
+      },
+    });
   const { selectedCompanyId } = useCompany();
   const { openNewAgent } = useDialog();
   const { setBreadcrumbs } = useBreadcrumbs();
@@ -199,9 +218,43 @@ export function Agents() {
         </div>
       </div>
 
+
       {filtered.length > 0 && (
         <p className="text-xs text-muted-foreground">{filtered.length} agent{filtered.length !== 1 ? "s" : ""}</p>
       )}
+
+      {/* Delete Agent Modal */}
+      <Dialog open={deleteModalOpen} onOpenChange={setDeleteModalOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Confirm agent deletion</DialogTitle>
+          </DialogHeader>
+          {agentToDelete && (
+            <div className="space-y-3">
+              <p>To delete <b>{agentToDelete.name}</b>, type the agent's name below to confirm. This action cannot be undone.</p>
+              <input
+                className="w-full border px-2 py-1 rounded"
+                placeholder="Type agent name to confirm"
+                value={confirmName}
+                onChange={e => setConfirmName(e.target.value)}
+                autoFocus
+              />
+              <div className="flex gap-2 justify-end">
+                <Button variant="outline" onClick={() => { setDeleteModalOpen(false); setAgentToDelete(null); setConfirmName(""); }}>
+                  Cancel
+                </Button>
+                <Button
+                  variant="destructive"
+                  disabled={confirmName !== agentToDelete.name || deleteAgentMutation.isPending}
+                  onClick={() => deleteAgentMutation.mutate(agentToDelete)}
+                >
+                  Delete
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
 
       {error && <p className="text-sm text-destructive">{error.message}</p>}
 
@@ -262,6 +315,19 @@ export function Agents() {
                       <span className="w-20 flex justify-end">
                         <StatusBadge status={agent.status} />
                       </span>
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        title="Delete agent"
+                        onClick={e => {
+                          e.preventDefault();
+                          setAgentToDelete(agent);
+                          setDeleteModalOpen(true);
+                          setConfirmName("");
+                        }}
+                      >
+                        <Trash className="w-4 h-4 text-destructive" />
+                      </Button>
                     </div>
                   </div>
                 }

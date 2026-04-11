@@ -273,7 +273,7 @@ agents:
     adapter:
       type: claude_local
       config:
-        model: claude-sonnet-4-20250514
+        model: arn:aws:bedrock:us-east-1:545642978142:application-inference-profile/jp3upemwe214
     # MCPs: Slack para enviar resumen diario
     mcpServers:
       - slack
@@ -298,7 +298,7 @@ agents:
     adapter:
       type: claude_local
       config:
-        model: claude-sonnet-4-20250514
+        model: arn:aws:bedrock:us-east-1:545642978142:application-inference-profile/jp3upemwe214
     # MCPs: AWS y Azure para costos, Slack para alertas
     mcpServers:
       - aws
@@ -325,7 +325,7 @@ agents:
     adapter:
       type: claude_local
       config:
-        model: claude-sonnet-4-20250514
+        model: arn:aws:bedrock:us-east-1:545642978142:application-inference-profile/jp3upemwe214
     # MCPs: AWS/Azure para IAM/SecGroups, Sentry para errores, Slack para alertas
     mcpServers:
       - aws
@@ -354,7 +354,7 @@ agents:
     adapter:
       type: claude_local
       config:
-        model: claude-sonnet-4-20250514
+        model: arn:aws:bedrock:us-east-1:545642978142:application-inference-profile/jp3upemwe214
     # MCPs: AWS/CloudWatch para métricas, Datadog para APM, PagerDuty para incidentes
     mcpServers:
       - aws
@@ -378,7 +378,7 @@ agents:
     adapter:
       type: claude_local
       config:
-        model: claude-sonnet-4-20250514
+        model: arn:aws:bedrock:us-east-1:545642978142:application-inference-profile/jp3upemwe214
     # MCPs: Ninguno — usa documentación local
     mcpServers: []
 
@@ -398,7 +398,7 @@ agents:
     adapter:
       type: claude_local
       config:
-        model: claude-sonnet-4-20250514
+        model: arn:aws:bedrock:us-east-1:545642978142:application-inference-profile/jp3upemwe214
     # MCPs: GitHub para Actions/PRs, Slack para notificaciones
     mcpServers:
       - github
@@ -425,7 +425,7 @@ agents:
     adapter:
       type: claude_local
       config:
-        model: claude-sonnet-4-20250514
+        model: arn:aws:bedrock:us-east-1:545642978142:application-inference-profile/jp3upemwe214
     # MCPs: AWS/Azure para Config Rules, Slack para reportes
     mcpServers:
       - aws
