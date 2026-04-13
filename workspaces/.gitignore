@@ -1,0 +1,18 @@
+# Workspaces gitignore
+
+# Environment files (cada workspace debe tener su propio .env)
+**/.env
+**/.env.local
+**/.env.*.local
+
+# Secrets (nunca commitear secrets reales)
+**/secrets.yaml
+**/secrets.*.yaml
+
+# Runtime data
+**/data/
+**/*.log
+**/.DS_Store
+
+# Node modules si alguien instala dependencias locales
+**/node_modules/

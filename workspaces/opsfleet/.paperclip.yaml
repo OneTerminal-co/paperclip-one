@@ -1,0 +1,14 @@
+# OpsFleet Paperclip Configuration
+company:
+  name: "OpsFleet"
+  identifier: "OPSFLEET"
+  description: "7 agentes especializados para operaciones cloud 24/7"
+
+# Referencia: Ver company-secrets.yaml para configuración de MCPs y secrets
+# Referencia: Ver agents-config.yaml para definición de agentes
+# Referencia: Ver README.md para documentación completa
+
+workspace:
+  skills: "./skills"
+  agents: "./agents"
+  config: "./config"
