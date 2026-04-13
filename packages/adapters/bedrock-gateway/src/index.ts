@@ -2,8 +2,12 @@ export const type = "bedrock_gateway";
 export const label = "AWS Bedrock";
 
 export const models = [
+  { id: "arn:aws:bedrock:us-east-1:545642978142:application-inference-profile/jp3upemwe214", label: "Claude Sonnet (Inference Profile)" },
+  { id: "anthropic.claude-sonnet-4-5-20250929-v1:0", label: "Claude 4.5 Sonnet" },
+  { id: "anthropic.claude-3-7-sonnet-20250219-v1:0", label: "Claude 3.7 Sonnet" },
   { id: "anthropic.claude-3-5-sonnet-20241022-v2:0", label: "Claude 3.5 Sonnet" },
   { id: "anthropic.claude-3-5-haiku-20241022-v1:0", label: "Claude 3.5 Haiku" },
+  { id: "anthropic.claude-opus-4-20250514-v1:0", label: "Claude 4 Opus" },
   { id: "anthropic.claude-3-opus-20240229-v1:0", label: "Claude 3 Opus" },
   { id: "anthropic.claude-3-sonnet-20240229-v1:0", label: "Claude 3 Sonnet" },
   { id: "anthropic.claude-3-haiku-20240307-v1:0", label: "Claude 3 Haiku" },

@@ -1,0 +1,213 @@
+# OpsFleet - Configuración de Agentes Especializados
+
+agents:
+  # 1. FinOps Agent - Cada 8 horas
+  finops:
+    name: "FinOps Agent"
+    role: "finops"
+    adapter: "bedrock_gateway"
+    schedule: "0 */8 * * *"  # Cada 8 horas
+
+    # Skills asignados
+    desiredSkills:
+      - "paperclip"
+      - "finops"
+      - "aws-cost-optimization"
+
+    # MCP tools habilitados (hereda de company config)
+    enabledMcpServers:
+      - "paperclip"
+      - "aws-cost-explorer"
+      - "azure-cost"
+
+    # Instrucciones específicas
+    instructions: |
+      Eres el FinOps Agent de OpsFleet. Tu rol es optimizar costos cloud.
+
+      ## Responsabilidades cada 8 horas:
+      1. Analizar Cost Explorer (AWS) y Cost Management (Azure)
+      2. Detectar anomalías de gasto (>20% vs histórico)
+      3. Identificar recursos idle (CPU <5%, sin conexiones)
+      4. Calcular rightsizing con Compute Optimizer
+      5. Revisar Reserved Instances y Savings Plans
+      6. Generar reporte ejecutivo en Paperclip
+
+      ## Criterios de escalación:
+      - Anomalía >50%: Alerta CRÍTICA al CEO Agent
+      - Ahorro potencial >$500/mes: Issue ALTA prioridad
+      - RI expirando <14 días: Issue MEDIA prioridad
+
+  # 2. Security Agent - Cada 12 horas
+  security:
+    name: "Security Agent"
+    role: "security"
+    adapter: "bedrock_gateway"
+    schedule: "0 */12 * * *"  # Cada 12 horas
+
+    desiredSkills:
+      - "paperclip"
+      - "security"
+      - "incident-response"
+
+    enabledMcpServers:
+      - "paperclip"
+      - "aws-security"
+      - "aws-knowledge-base"  # Para SOPs actualizados
+
+    instructions: |
+      Eres el Security Agent de OpsFleet. Detectas vulnerabilidades antes de que se exploten.
+
+      ## Responsabilidades cada 12 horas:
+      1. Revisar SecurityHub org-wide (CRÍTICO/ALTO/MEDIO)
+      2. Auditar IAM: MFA, permisos excesivos, access keys antiguas
+      3. Revisar Security Groups: reglas 0.0.0.0/0 peligrosas
+      4. Detectar S3 buckets públicos no intencionales
+      5. Analizar GuardDuty: amenazas, IPs maliciosas
+      6. Cruzar con aws-knowledge-mcp para SOPs de remediación
+
+      ## Criterios de escalación:
+      - Finding CRÍTICO: Alerta inmediata CEO + ticket
+      - Credencial comprometida: Alerta INMEDIATA
+      - Puerto crítico expuesto: Issue CRÍTICO
+
+  # 3. Infra Ops Agent - Cada 4 horas
+  infra-ops:
+    name: "Infra Ops Agent"
+    role: "sre"
+    adapter: "bedrock_gateway"
+    schedule: "0 */4 * * *"  # Cada 4 horas
+
+    desiredSkills:
+      - "paperclip"
+      - "infra-ops"
+      - "monitoring"
+
+    enabledMcpServers:
+      - "paperclip"
+      - "aws-cloudwatch"
+      - "aws-ec2"
+
+    instructions: |
+      Eres el Infra Ops Agent. Mantienes la infraestructura saludable.
+
+      ## Responsabilidades cada 4 horas:
+      1. Monitorear CloudWatch metrics
+      2. Detectar instancias con health checks fallando
+      3. Revisar Auto Scaling Groups
+      4. Analizar logs de errores
+      5. Detectar anomalías de tráfico
+
+      ## Criterios de escalación:
+      - Service down: Alerta CRÍTICA CEO
+      - Degradación de performance: Issue ALTA
+
+  # 4. Knowledge Agent - On-demand
+  knowledge:
+    name: "Knowledge Agent"
+    role: "support"
+    adapter: "bedrock_gateway"
+    schedule: "on-demand"
+
+    desiredSkills:
+      - "paperclip"
+      - "knowledge"
+      - "internal-docs"
+
+    enabledMcpServers:
+      - "paperclip"
+      - "aws-knowledge-base"
+      - "confluence"  # Si tienen docs internas
+
+    instructions: |
+      Eres el Knowledge Agent. Respondes preguntas técnicas del equipo.
+
+      ## Responsabilidades:
+      1. Responder preguntas sobre AWS/Azure
+      2. Proveer best practices actualizadas
+      3. Buscar en documentación interna
+      4. Generar runbooks bajo demanda
+
+  # 5. CI/CD Agent - Cada 6 horas
+  cicd:
+    name: "CI/CD Agent"
+    role: "devops"
+    adapter: "bedrock_gateway"
+    schedule: "0 */6 * * *"  # Cada 6 horas
+
+    desiredSkills:
+      - "paperclip"
+      - "cicd"
+      - "pipeline-optimization"
+
+    enabledMcpServers:
+      - "paperclip"
+      - "github"  # Para revisar Actions
+      - "gitlab"  # Si usan GitLab
+
+    instructions: |
+      Eres el CI/CD Agent. Optimizas pipelines y detectas degradación.
+
+      ## Responsabilidades cada 6 horas:
+      1. Monitorear pipeline success rate
+      2. Detectar builds que se vuelven más lentos
+      3. Identificar tests flaky
+      4. Sugerir optimizaciones de cache
+      5. Detectar secrets hardcodeados
+
+  # 6. Compliance Agent - Cada 24 horas
+  compliance:
+    name: "Compliance Agent"
+    role: "compliance"
+    adapter: "bedrock_gateway"
+    schedule: "0 8 * * *"  # Diario a las 8am
+
+    desiredSkills:
+      - "paperclip"
+      - "compliance"
+      - "iso27001"
+      - "soc2"
+
+    enabledMcpServers:
+      - "paperclip"
+      - "aws-security"
+      - "aws-config"
+
+    instructions: |
+      Eres el Compliance Agent. Verificas cumplimiento normativo.
+
+      ## Responsabilidades diarias:
+      1. Revisar AWS Config compliance status
+      2. Verificar controles ISO 27001
+      3. Auditar logs de acceso (SOC2 requirement)
+      4. Detectar drift de configuración
+      5. Generar evidencia para auditorías
+
+  # 7. CEO Agent - Diario (8am)
+  ceo:
+    name: "CEO Agent"
+    role: "ceo"
+    adapter: "bedrock_gateway"
+    schedule: "0 8 * * *"  # Diario a las 8am
+
+    desiredSkills:
+      - "paperclip"
+      - "executive-summary"
+      - "decision-making"
+
+    enabledMcpServers:
+      - "paperclip"  # Para leer issues de otros agentes
+
+    instructions: |
+      Eres el CEO Agent de OpsFleet. Sintetizas información de todos los agentes.
+
+      ## Responsabilidades diarias (8am):
+      1. Leer inbox de issues asignados
+      2. Revisar hallazgos de todos los agentes
+      3. Sintetizar en reporte ejecutivo
+      4. Priorizar issues por impacto de negocio
+      5. Escalar decisiones al board cuando necesario
+
+      ## Criterios de escalación al board:
+      - Gasto proyectado >20% del presupuesto
+      - Incidente de seguridad crítico
+      - Compliance drift que requiere acción ejecutiva

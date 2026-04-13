@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import { Link, useNavigate, useLocation } from "@/lib/router";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { agentsApi, type OrgNode } from "../api/agents";
 import { heartbeatsApi } from "../api/heartbeats";
 import { useCompany } from "../context/CompanyContext";
@@ -17,7 +17,11 @@ import { relativeTime, cn, agentRouteRef, agentUrl } from "../lib/utils";
 import { PageTabBar } from "../components/PageTabBar";
 import { Tabs } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
-import { Bot, Plus, List, GitBranch, SlidersHorizontal } from "lucide-react";
+import { Bot, Plus, List, GitBranch, SlidersHorizontal, Trash, Play, Pause } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { ToggleSwitch } from "@/components/ui/toggle-switch";
+import { useMutation } from "@tanstack/react-query";
+import { useState as useReactState } from "react";
 import { AGENT_ROLE_LABELS, type Agent } from "@paperclipai/shared";
 
 import { getAdapterLabel } from "../adapters/adapter-display-registry";
@@ -59,7 +63,46 @@ export function Agents() {
   const { setBreadcrumbs } = useBreadcrumbs();
   const navigate = useNavigate();
   const location = useLocation();
+  const queryClient = useQueryClient();
   const { isMobile } = useSidebar();
+
+  // Modal state for agent deletion
+  const [deleteModalOpen, setDeleteModalOpen] = useReactState(false);
+  const [agentToDelete, setAgentToDelete] = useReactState<Agent | null>(null);
+  const [confirmName, setConfirmName] = useReactState("");
+
+  const deleteAgentMutation = useMutation({
+    mutationFn: async (agent: Agent) => {
+      await agentsApi.remove(agent.id, selectedCompanyId ?? undefined);
+    },
+    onSuccess: () => {
+      setDeleteModalOpen(false);
+      setAgentToDelete(null);
+      setConfirmName("");
+    },
+  });
+
+  const toggleAgentMutation = useMutation({
+    mutationFn: async ({ agent, action }: { agent: Agent; action: 'pause' | 'resume' }) => {
+      if (action === 'pause') {
+        return agentsApi.pause(agent.id, selectedCompanyId ?? undefined);
+      } else {
+        return agentsApi.resume(agent.id, selectedCompanyId ?? undefined);
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.agents.list(selectedCompanyId!) });
+    },
+  });
+
+  const wakeAgentMutation = useMutation({
+    mutationFn: async (agent: Agent) => {
+      return agentsApi.invoke(agent.id, selectedCompanyId ?? undefined);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.heartbeats(selectedCompanyId!) });
+    },
+  });
   const pathSegment = location.pathname.split("/").pop() ?? "all";
   const tab: FilterTab = (pathSegment === "all" || pathSegment === "active" || pathSegment === "paused" || pathSegment === "error") ? pathSegment : "all";
   const [view, setView] = useState<"list" | "org">("org");
@@ -199,9 +242,43 @@ export function Agents() {
         </div>
       </div>
 
+
       {filtered.length > 0 && (
         <p className="text-xs text-muted-foreground">{filtered.length} agent{filtered.length !== 1 ? "s" : ""}</p>
       )}
+
+      {/* Delete Agent Modal */}
+      <Dialog open={deleteModalOpen} onOpenChange={setDeleteModalOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Confirm agent deletion</DialogTitle>
+          </DialogHeader>
+          {agentToDelete && (
+            <div className="space-y-3">
+              <p>To delete <b>{agentToDelete.name}</b>, type the agent's name below to confirm. This action cannot be undone.</p>
+              <input
+                className="w-full border px-2 py-1 rounded"
+                placeholder="Type agent name to confirm"
+                value={confirmName}
+                onChange={e => setConfirmName(e.target.value)}
+                autoFocus
+              />
+              <div className="flex gap-2 justify-end">
+                <Button variant="outline" onClick={() => { setDeleteModalOpen(false); setAgentToDelete(null); setConfirmName(""); }}>
+                  Cancel
+                </Button>
+                <Button
+                  variant="destructive"
+                  disabled={confirmName !== agentToDelete.name || deleteAgentMutation.isPending}
+                  onClick={() => deleteAgentMutation.mutate(agentToDelete)}
+                >
+                  Delete
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
 
       {error && <p className="text-sm text-destructive">{error.message}</p>}
 
@@ -234,7 +311,7 @@ export function Agents() {
                 }
                 trailing={
                   <div className="flex items-center gap-3">
-                    <span className="sm:hidden">
+                    <span className="sm:hidden flex items-center gap-2">
                       {liveRunByAgent.has(agent.id) ? (
                         <LiveRunIndicator
                           agentRef={agentRouteRef(agent)}
@@ -244,6 +321,16 @@ export function Agents() {
                       ) : (
                         <StatusBadge status={agent.status} />
                       )}
+                      {/* Toggle for mobile */}
+                      <ToggleSwitch
+                        checked={agent.status === "active" || agent.status === "idle" || agent.status === "running"}
+                        disabled={agent.status === "terminated" || toggleAgentMutation.isPending}
+                        onCheckedChange={(checked) => {
+                          const action = checked ? 'resume' : 'pause';
+                          toggleAgentMutation.mutate({ agent, action });
+                        }}
+                        onClick={(e) => e.preventDefault()}
+                      />
                     </span>
                     <div className="hidden sm:flex items-center gap-3">
                       {liveRunByAgent.has(agent.id) && (
@@ -262,6 +349,43 @@ export function Agents() {
                       <span className="w-20 flex justify-end">
                         <StatusBadge status={agent.status} />
                       </span>
+                      {/* Toggle pause/resume */}
+                      <ToggleSwitch
+                        checked={agent.status === "active" || agent.status === "idle" || agent.status === "running"}
+                        disabled={agent.status === "terminated" || toggleAgentMutation.isPending}
+                        onCheckedChange={(checked) => {
+                          const action = checked ? 'resume' : 'pause';
+                          toggleAgentMutation.mutate({ agent, action });
+                        }}
+                        title={agent.status === "paused" ? "Resume agent" : "Pause agent"}
+                        onClick={(e) => e.preventDefault()}
+                      />
+                      {/* Trigger manual run */}
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        title="Trigger heartbeat"
+                        disabled={agent.status === "paused" || agent.status === "terminated" || wakeAgentMutation.isPending}
+                        onClick={e => {
+                          e.preventDefault();
+                          wakeAgentMutation.mutate(agent);
+                        }}
+                      >
+                        <Play className="w-4 h-4" />
+                      </Button>
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        title="Delete agent"
+                        onClick={e => {
+                          e.preventDefault();
+                          setAgentToDelete(agent);
+                          setDeleteModalOpen(true);
+                          setConfirmName("");
+                        }}
+                      >
+                        <Trash className="w-4 h-4 text-destructive" />
+                      </Button>
                     </div>
                   </div>
                 }
